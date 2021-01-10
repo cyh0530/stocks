@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Table, Select, Row, Col, Tabs } from "antd";
+import { Table, Tabs } from "antd";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import { parse } from "node-html-parser";
-import { singleStockColumns, summaryLink } from "../utils/Constants";
 
-export default function Main() {
+import { singleStockColumns } from "../utils/Constants";
+
+export default function Main({ stockData }) {
   const columns = [
     {
       title: "股票",
       dataIndex: "stock",
       key: "stock",
       ellipsis: true,
+      width: 100,
+      fixed: "left",
       render: (text, row, index) => {
         const allData = row.subDataSource;
 
@@ -21,14 +22,14 @@ export default function Main() {
         // } else {
         //   style.color = "red";
         // }
-        let fullName = row.fullName
-        if (fullName.length > 17) {
-          fullName = fullName.substring(0, 17) + "..."
-        }
+        let fullName = row.fullName;
+        // if (fullName.length > 25) {
+        //   fullName = fullName.substring(0, 25) + "...";
+        // }
         return (
           <>
             <p>
-              <Link to={`/${row.stock}`} target="_blank" rel="noopener noreferrer">
+              <Link to={`/${row.exchanges}/${row.stock}`}>
                 {text.padEnd(6)} <span style={style}> - {fullName}</span>
               </Link>
               <br />
@@ -38,6 +39,130 @@ export default function Main() {
         );
       },
       sorter: (a, b) => a.stock - b.stock,
+    },
+    {
+      title: "最大漲速(週)",
+      dataIndex: "speed",
+      key: "speed",
+      align: "right",
+      width: 100,
+      render: (text, row, index) => {
+        const allData = row.subDataSource;
+        let maxSpeed = 0,
+          maxSpeedPct = 0;
+        for (let data of allData) {
+          const priceDiff = data.predict.price - data.current.price;
+          const dateDiffMillis =
+            new Date(data.predict.date) - new Date(data.current.date);
+          const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
+          const speed =
+            Math.round((priceDiff / ((dateDiff / 7) * 5)) * 10000) / 10000;
+          const speedPct = Math.round((speed / dateDiff) * 100) / 100;
+
+          if (speedPct > maxSpeedPct) {
+            maxSpeedPct = speedPct;
+            maxSpeed = speed;
+          }
+        }
+
+        return (
+          <p>
+            <span>{maxSpeedPct}%</span>
+            <br />
+            <small>{maxSpeed}</small>
+          </p>
+        );
+      },
+      defaultSortOrder: "descend",
+      sorter: (a, b) => {
+        const aAllData = a.subDataSource;
+
+        let aMaxSpeedPct = 0;
+        for (let data of aAllData) {
+          const priceDiff = data.predict.price - data.current.price;
+          const dateDiffMillis =
+            new Date(data.predict.date) - new Date(data.current.date);
+          const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
+          const speed =
+            Math.round((priceDiff / ((dateDiff / 7) * 5)) * 100) / 100;
+          const speedPct = Math.round((speed / dateDiff) * 100) / 100;
+
+          if (speedPct > aMaxSpeedPct) {
+            aMaxSpeedPct = speedPct;
+          }
+        }
+        const bAllData = b.subDataSource;
+
+        let bMaxSpeedPct = 0;
+        for (let data of bAllData) {
+          const priceDiff = data.predict.price - data.current.price;
+          const dateDiffMillis =
+            new Date(data.predict.date) - new Date(data.current.date);
+          const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
+          const speed =
+            Math.round((priceDiff / ((dateDiff / 7) * 5)) * 100) / 100;
+          const speedPct = Math.round((speed / dateDiff) * 100) / 100;
+
+          if (speedPct > bMaxSpeedPct) {
+            bMaxSpeedPct = speedPct;
+          }
+        }
+
+        return aMaxSpeedPct - bMaxSpeedPct;
+      },
+    },
+    {
+      title: "獲利空間",
+      dataIndex: "gain",
+      key: "gain",
+      align: "right",
+      width: 100,
+      render: (text, row, index) => {
+        const allData = row.subDataSource;
+        let min = allData[0].gain.price;
+        let minPct = allData[0].gain.percentage;
+        let max = allData[0].gain.price;
+        let maxPct = allData[0].gain.percentage;
+        for (let data of allData) {
+          if (data.gain.price < min) {
+            min = data.gain.price;
+            minPct = data.gain.percentage;
+          }
+          if (data.gain.price > max) {
+            max = data.gain.price;
+            maxPct = data.gain.percentage;
+          }
+        }
+
+        const price = min === max ? min : `${min} - ${max}`;
+        const pct = minPct === maxPct ? minPct : `${minPct} - ${maxPct}`;
+        return (
+          <p>
+            <span>{price} </span>
+            <br />
+            <small>{pct} </small>
+          </p>
+        );
+      },
+      sorter: (a, b) => {
+        const aAllData = a.subDataSource;
+        let aMin = aAllData[0].predict.price;
+        let aMax = aAllData[0].predict.price;
+        for (let data of aAllData) {
+          aMin = Math.min(data.predict.price, aMin);
+          aMax = Math.max(data.predict.price, aMax);
+        }
+
+        const bAllData = b.subDataSource;
+        let bMin = bAllData[0].predict.price;
+        let bMax = bAllData[0].predict.price;
+        for (let data of bAllData) {
+          bMin = Math.min(data.predict.price, bMin);
+          bMax = Math.max(data.predict.price, bMax);
+        }
+
+        return aMax - bMax;
+      },
     },
     // {
     //   title: "現價",
@@ -114,7 +239,7 @@ export default function Main() {
       dataIndex: "predict",
       key: "predict",
       align: "right",
-
+      width: 100,
       render: (text, row, index) => {
         const allData = row.subDataSource;
         let min = allData[0].predict.price;
@@ -166,285 +291,101 @@ export default function Main() {
       },
       sorter: (a, b) => a.predict.price - b.predict.price,
     },*/,
-    {
-      title: "獲利空間",
-      dataIndex: "gain",
-      key: "gain",
-      align: "right",
-
-      render: (text, row, index) => {
-        const allData = row.subDataSource;
-        let min = allData[0].gain.price;
-        let minPct = allData[0].gain.percentage;
-        let max = allData[0].gain.price;
-        let maxPct = allData[0].gain.percentage;
-        for (let data of allData) {
-          if (data.gain.price < min) {
-            min = data.gain.price;
-            minPct = data.gain.percentage;
-          }
-          if (data.gain.price > max) {
-            max = data.gain.price;
-            maxPct = data.gain.percentage;
-          }
-        }
-
-        const price = min === max ? min : `${min} - ${max}`;
-        const pct = minPct === maxPct ? minPct : `${minPct} - ${maxPct}`;
-        return (
-          <p>
-            <span>{price} </span>
-            <br />
-            <small>{pct} </small>
-          </p>
-        );
-      },
-      sorter: (a, b) => {
-        const aAllData = a.subDataSource;
-        let aMin = aAllData[0].predict.price;
-        let aMax = aAllData[0].predict.price;
-        for (let data of aAllData) {
-          aMin = Math.min(data.predict.price, aMin);
-          aMax = Math.max(data.predict.price, aMax);
-        }
-
-        const bAllData = b.subDataSource;
-        let bMin = bAllData[0].predict.price;
-        let bMax = bAllData[0].predict.price;
-        for (let data of bAllData) {
-          bMin = Math.min(data.predict.price, bMin);
-          bMax = Math.max(data.predict.price, bMax);
-        }
-
-        return aMax - bMax;
-      },
-    },
-    {
-      title: "最大漲速(週)",
-      dataIndex: "speed",
-      key: "speed",
-      align: "right",
-
-      render: (text, row, index) => {
-        const allData = row.subDataSource;
-        let maxSpeed = 0,
-          maxSpeedPct = 0;
-        for (let data of allData) {
-          const priceDiff = data.predict.price - data.current.price;
-          const dateDiffMillis =
-            new Date(data.predict.date) - new Date(data.current.date);
-          const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
-          const speed =
-            Math.round((priceDiff / ((dateDiff / 7) * 5)) * 10000) / 10000;
-          const speedPct = Math.round((speed / dateDiff) * 10000) / 100;
-
-          if (speedPct > maxSpeedPct) {
-            maxSpeedPct = speedPct;
-            maxSpeed = speed;
-          }
-        }
-
-        return (
-          <p>
-            <span>{maxSpeedPct}%</span>
-            <br />
-            <small>{maxSpeed}</small>
-          </p>
-        );
-      },
-      sorter: (a, b) => {
-        const aAllData = a.subDataSource;
-
-        let aMaxSpeedPct = 0;
-        for (let data of aAllData) {
-          const priceDiff = data.predict.price - data.current.price;
-          const dateDiffMillis =
-            new Date(data.predict.date) - new Date(data.current.date);
-          const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
-          const speed =
-            Math.round((priceDiff / ((dateDiff / 7) * 5)) * 100) / 100;
-          const speedPct = Math.round((speed / dateDiff) * 100) / 100;
-
-          if (speedPct > aMaxSpeedPct) {
-            aMaxSpeedPct = speedPct;
-          }
-        }
-        const bAllData = b.subDataSource;
-
-        let bMaxSpeedPct = 0;
-        for (let data of bAllData) {
-          const priceDiff = data.predict.price - data.current.price;
-          const dateDiffMillis =
-            new Date(data.predict.date) - new Date(data.current.date);
-          const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
-          const speed =
-            Math.round((priceDiff / ((dateDiff / 7) * 5)) * 100) / 100;
-          const speedPct = Math.round((speed / dateDiff) * 100) / 100;
-
-          if (speedPct > bMaxSpeedPct) {
-            bMaxSpeedPct = speedPct;
-          }
-        }
-
-        return aMaxSpeedPct - bMaxSpeedPct;
-      },
-    },
   ];
   const [tabPanes, setTabPanes] = useState([]);
-  const { Option } = Select;
   const { TabPane } = Tabs;
-  const options = [];
-  // this.state.data.map((d) => (
-  //   <Option key={d.value}>
-  //     <Link target="_blank" rel="noopener noreferrer">
-  //       {d.text}
-  //     </Link>
-  //   </Option>
-  // ));
 
   useEffect(() => {
-    const wrapper = async () => {
-      try {
-        const res = await axios
-          .get(summaryLink)
-          .then((res) => {
-            return res.data;
-          })
-          .then((res) => {
-            return res;
-          });
-        const html = parse(res);
+    // parse raw data to website required format
+    const tabs = [];
+    for (let exchanges in stockData) {
+      const subTabs = [];
+      const exchangesAllData = stockData[exchanges];
+      const newDataSource = [];
+      const holdDataSource = [];
+      for (let symbol in exchangesAllData) {
+        const fullName = exchangesAllData[symbol].fullName;
+        const stockData = exchangesAllData[symbol].data;
+        const newData = stockData.new;
+        const holdData = stockData.hold;
 
-        const viewport = html.querySelector("#sheets-viewport");
-        const tableBody = viewport.querySelector("#0 table tbody");
-        const columnsNameRow = tableBody.childNodes[0];
-        let columnsName = [];
-        for (let i = 0; i < columnsNameRow.childNodes.length; i++) {
-          columnsName.push(columnsNameRow.childNodes[i].innerText);
-        }
-        let data = {};
-        console.log("columnsName = ", columnsName);
-        // read all days
-        /*
-        for (let i = 0; i < tableBody.childNodes.length; i++) {
-          const tr = tableBody.childNodes[i];
-          let rowData = {};
-          const date = tr.childNodes[1].innerText;
-
-          for (let j = 2; j < tr.childNodes.length; j++) {
-            const td = tr.childNodes[j];
-            const text = td.innerText.replace(/&quot;/g, '"');
-            rowData[columnsName[j]] = text;
-          }
-          data[date] = rowData;
-        }*/
-
-        // read the last day
-        const tr = tableBody.childNodes[tableBody.childNodes.length - 2];
-        let lastDayData = {};
-
-        for (let j = 2; j < tr.childNodes.length; j++) {
-          const td = tr.childNodes[j];
-          const text = td.innerText.replace(/&quot;/g, '"');
-          console.log(text);
-          lastDayData[columnsName[j]] = JSON.parse(text);
-        }
-        console.log("lastDayData = ", lastDayData);
-        // parse raw data to website required format
-        const tabs = [];
-        for (let country in lastDayData) {
-          const subTabs = [];
-          const countryAllData = lastDayData[country];
-          const newDataSource = [];
-          const holdDataSource = [];
-          for (let symbol in countryAllData) {
-            const fullName = countryAllData[symbol].fullName;
-            const stockData = countryAllData[symbol].data;
-            const newData = stockData.new;
-            const holdData = stockData.hold;
-
-            if (newData.length > 0) {
-              newDataSource.push({
-                key: newDataSource.length,
-                stock: symbol,
-                fullName,
-                subDataSource: newData,
-              });
-            }
-            if (holdData.length > 0) {
-              holdDataSource.push({
-                key: holdDataSource.length,
-                stock: symbol,
-                fullName,
-                subDataSource: holdData,
-              });
-            }
-          }
-
-          subTabs.push({
-            tabName: "Today New",
-            dataSource: newDataSource,
-          });
-
-          subTabs.push({
-            tabName: "All",
-            dataSource: holdDataSource,
-          });
-
-          tabs.push({
-            country,
-            subTabs,
+        if (newData.length > 0) {
+          newDataSource.push({
+            key: newDataSource.length,
+            exchanges: exchanges,
+            stock: symbol,
+            fullName,
+            subDataSource: newData,
           });
         }
-        console.log(tabs);
-
-        setTabPanes(tabs);
-      } catch (err) {
-        console.error(err);
+        if (holdData.length > 0) {
+          holdDataSource.push({
+            key: holdDataSource.length,
+            exchanges: exchanges,
+            stock: symbol,
+            fullName,
+            subDataSource: holdData,
+          });
+        }
       }
-    };
-    wrapper();
-  }, []);
 
-  const onSearch = (value) => {};
+      subTabs.push({
+        tabName: "Today New",
+        dataSource: newDataSource,
+      });
+
+      subTabs.push({
+        tabName: "All",
+        dataSource: holdDataSource.concat(newDataSource),
+      });
+
+      tabs.push({
+        exchanges,
+        subTabs,
+      });
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    const templateTab = [
+      {
+        exchanges: "TPE",
+        subTabs: [
+          {
+            tabName: "Today New",
+            dataSource: [
+              {
+                key: 1,
+                exchanges: "TPE",
+                stock: "2330",
+                fullName: "台積電",
+                subDataSource: [
+                  {
+                    key: 1,
+                    start: {},
+                    middle: {},
+                    current: {},
+                    predict: {},
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    console.log(tabs);
+
+    setTabPanes(tabs);
+  }, [stockData]);
 
   return (
-    <>
-      <div style={{ width: "100%" }}>
-        <Row>
-          <Col xs={24} sm={24} md={6} lg={6} xl={5} xxl={4}>
-            <h1>Stocks</h1>
-          </Col>
-          <Col
-            xs={0}
-            sm={0}
-            md={18}
-            lg={18}
-            xl={19}
-            xxl={20}
-            style={{ textAlign: "right" }}
-          >
-            <Select
-              showSearch
-              defaultActiveFirstOption={false}
-              showArrow={false}
-              filterOption={false}
-              onSearch={onSearch}
-              notFoundContent={null}
-              placeholder="Search..."
-              style={{ width: "150px", textAlign: "left" }}
-            >
-              {options}
-            </Select>
-          </Col>
-        </Row>
-      </div>
-      <Tabs defaultActiveKey="0">
-        {tabPanes.map((tab, index) => (
-          <TabPane tab={tab.country} key={index}>
-            <Tabs defaultActiveKey="0">
-              {tab.subTabs.map((subTab, index2) => (
-                <TabPane tab={subTab.tabName} key={index2}>
+    <Tabs defaultActiveKey="0">
+      {tabPanes.map((tab, index) => (
+        <TabPane tab={tab.exchanges} key={index}>
+          <Tabs defaultActiveKey="0">
+            {tab.subTabs.map((subTab, index2) => (
+              <TabPane tab={subTab.tabName} key={index2}>
+                <div style={{ margin: "auto" }}>
                   <Table
                     key={index2}
                     size="small"
@@ -452,25 +393,26 @@ export default function Main() {
                     bordered
                     dataSource={subTab.dataSource}
                     expandable={{ expandedRowRender, expandRowByClick: true }}
+                    scroll={{ x: 600 }}
                   />
-                </TabPane>
-              ))}
-            </Tabs>
-          </TabPane>
-        ))}
-        {/* <TabPane tab="Favorite" key="1">
+                </div>
+              </TabPane>
+            ))}
+          </Tabs>
+        </TabPane>
+      ))}
+      {/* <TabPane tab="Favorite" key="1">
           <Table
             columns={columns}
             dataSource={dataSource}
             expandable={{ expandedRowRender }}
           />
         </TabPane> */}
-      </Tabs>
-    </>
+    </Tabs>
   );
 }
 
-const expandedRowRender = (record, index, indent, expanded) => {
+const expandedRowRender = (record) => {
   let dataSource = [];
   // for (let stock in raw) {
   //   for (let i = 0; i < raw[stock].hold.length; i++) {
@@ -500,13 +442,16 @@ const expandedRowRender = (record, index, indent, expanded) => {
   }
   console.log(dataSource);
   return (
-    <Table
-      size="small"
-      columns={singleStockColumns}
-      dataSource={dataSource}
-      bordered
-      pagination={{ defaultPageSize: 100, hideOnSinglePage: true }}
-    />
+    <div style={{ margin: "10px 0px" }}>
+      <Table
+        size="small"
+        columns={singleStockColumns}
+        dataSource={dataSource}
+        bordered
+        pagination={{ defaultPageSize: 100, hideOnSinglePage: true }}
+        scroll={{ x: 600 }}
+      />
+    </div>
   );
 };
 /*
