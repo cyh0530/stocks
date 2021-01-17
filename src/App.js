@@ -9,7 +9,7 @@ import { appScriptURL, summaryLink } from "./utils/Constants";
 
 function App() {
   const [stockData, setStockData] = useState({});
-  const [date, setDate] = useState("");
+
   useEffect(() => {
     fetchTodayData();
   }, []);
@@ -25,64 +25,50 @@ function App() {
         .then((res) => {
           return res;
         });
+
       const html = parse(res);
+      const tabs = new Map();
 
       const viewport = html.querySelector("#sheets-viewport");
-      const tableBody = viewport.querySelector("#0 table tbody");
-      const columnsNameRow = tableBody.childNodes[0];
-      let columnsName = [];
-      for (let i = 0; i < columnsNameRow.childNodes.length; i++) {
-        columnsName.push(columnsNameRow.childNodes[i].innerText);
-      }
+      viewport.childNodes.forEach((node) => {
+        tabs.set(node.id, { id: node.id, key: node.id });
+      });
+
+      const sheetMenu = html.querySelector("#sheet-menu");
+      tabs.forEach((value, id) => {
+        const tabName = sheetMenu.querySelector(`#sheet-button-${id}`)
+          .childNodes[0].innerText;
+        tabs.set(id, {
+          ...tabs.get(id),
+          name: tabName,
+        });
+      });
       let data = {};
 
-      // read all days
-      /*
-        for (let i = 0; i < tableBody.childNodes.length; i++) {
-          const tr = tableBody.childNodes[i];
-          let rowData = {};
-          const date = tr.childNodes[1].innerText;
+      tabs.forEach((value, id) => {
+        const tableBody = viewport.querySelector(`#${id} table tbody`);
 
-          for (let j = 2; j < tr.childNodes.length; j++) {
-            const td = tr.childNodes[j];
+        let minusIndex = 1;
+
+        while (tableBody.childNodes.length - minusIndex > 1) {
+          const tr =
+            tableBody.childNodes[tableBody.childNodes.length - minusIndex];
+          // date = tr.childNodes[1].innerText;
+          let index = 2;
+          for (index = 2; index < tr.childNodes.length; index++) {
+            const td = tr.childNodes[index];
             const text = td.innerText.replace(/&quot;/g, '"');
-            rowData[columnsName[j]] = text;
+            if (text === "") break;
+            const parsedText = JSON.parse(text);
+            data[value.name] = { ...data[value.name], ...parsedText };
           }
-          data[date] = rowData;
-        }*/
+          if (index > 2) break;
 
-      // read the last day
-      let exchangeHasContent = {};
-      for (let i = 1; i < columnsName.length; i++) {
-        exchangeHasContent[columnsName[i]] = false;
-      }
-      let minusIndex = 1;
-      let date;
-
-      const allDone = () => {
-        for (let exchange in exchangeHasContent) {
-          if (!exchangeHasContent[exchange]) return false;
+          minusIndex++;
         }
-        return true;
-      };
-      while (!allDone() && tableBody.childNodes.length - minusIndex > 1) {
-        const tr =
-          tableBody.childNodes[tableBody.childNodes.length - minusIndex];
-        date = tr.childNodes[1].innerText;
-        for (let j = 2; j < tr.childNodes.length; j++) {
-          if (exchangeHasContent[columnsName[j]]) continue;
-          const td = tr.childNodes[j];
-          const text = td.innerText.replace(/&quot;/g, '"');
-          if (text === "{}") continue;
-          const parsedText = JSON.parse(text);
-          data[columnsName[j]] = parsedText;
-          exchangeHasContent[columnsName[j]] = true;
-        }
-        minusIndex++;
-      }
+      });
 
       setStockData(data);
-      setDate(date);
       message.success({
         content: "Finish loading",
         key: "loading",
@@ -97,10 +83,10 @@ function App() {
   return (
     <div style={{ padding: 10 }}>
       <BrowserRouter basename="/stocks">
-        <Header date={date}></Header>
+        <Header></Header>
         <div style={{ width: "95%", margin: "auto" }}>
           <Switch>
-            <Route exact path="/:exchange/:symbol" component={Single} />
+            <Route exact path="/:country/:symbol" component={Single} />
             <Route exact path="/">
               <Main stockData={stockData} />
             </Route>
@@ -111,7 +97,7 @@ function App() {
   );
 }
 
-const Header = ({ date }) => {
+const Header = () => {
   const { Option } = Select;
   const [options, setOptions] = useState([]);
   useEffect(() => {
@@ -120,17 +106,14 @@ const Header = ({ date }) => {
 
   const fetchStockList = async () => {
     try {
-      const data = await axios
-        .get(appScriptURL + "?mode=stock-list")
-        .then((res) => {
-          if (res.ok) return res.data;
-        })
-        .then((data) => {
-          return data;
-        });
+      const data = await axios({
+        url: appScriptURL,
+        params: { mode: "stock-list" },
+      }).then((res) => {
+        return res.data;
+      });
 
-      setOptions([]);
-      // setOptions(data)
+      setOptions(data);
     } catch (err) {
       console.error(err);
       message.error("Search Function will not work");
@@ -174,7 +157,6 @@ const Header = ({ date }) => {
                 Stocks
               </Link>
             </h1>{" "}
-            <small>{date}</small>
           </Col>
           <Col
             xs={0}
@@ -198,8 +180,10 @@ const Header = ({ date }) => {
             >
               {options.map((option) => (
                 <Option
-                  key={`${option.exchange}/${option.symbol}`}
-                  value={`${option.exchange}/${option.symbol}`}
+                  key={`${option.country}/${option.symbol}`}
+                  value={`${option.country}/${option.symbol}`}
+                  symbol={option.symbol}
+                  fullName={option.fullName}
                 >
                   <span>{option.symbol}</span>
                   <br />
