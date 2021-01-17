@@ -1,5 +1,6 @@
 {
-  "name": "stock-web.nosync",
+  "name": "stocks",
+  "homepage": "https://cyh0530.github.io/stocks",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -22,7 +23,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "gh-pages -d dist"
+    "deploy": "react-scripts build && gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
