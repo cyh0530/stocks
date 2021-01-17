@@ -79,7 +79,6 @@ export default function Main({ stockData }) {
         ],
       },
     ];
-    console.log(tabs);
 
     setTabPanes(tabs);
   }, [stockData]);
