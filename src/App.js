@@ -57,7 +57,7 @@ function App() {
           let index = 2;
           for (index = 2; index < tr.childNodes.length; index++) {
             const td = tr.childNodes[index];
-            const text = td.innerText.replace(/&quot;/g, '"');
+            const text = td.innerText.replace(/&quot;/g, '"').replace(/&apos;/g, '\'');
             if (text === "") break;
             const parsedText = JSON.parse(text);
             data[value.name] = { ...data[value.name], ...parsedText };
