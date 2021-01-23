@@ -172,7 +172,7 @@ const columns = [
     render: (text, row, index) => {
       const allData = row.subDataSource;
 
-      let style = { color: "green" };
+      let style = {};
 
       let fullName = row.fullName;
       // if (fullName.length > 25) {
@@ -180,10 +180,16 @@ const columns = [
       // }
       let differencePoint = allData[0].current.difference.points;
       let differencePct = allData[0].current.difference.percentage + "%";
+
       if (differencePoint > 0) {
+        style.color = "red";
+      }
+
+      if (differencePoint >= 0) {
         differencePoint = `+${differencePoint}`;
         differencePct = `+${differencePct}`;
-        style.color = "red";
+      } else if (differencePoint < 0) {
+        style.color = "green";
       }
       return (
         <p>
@@ -208,7 +214,7 @@ const columns = [
     render: (text, row, index) => {
       const allData = row.subDataSource;
       let action = "買";
-      let style = {color: "red"};
+      let style = { color: "red" };
 
       for (let data of allData) {
         if (data.action === "sell") {
