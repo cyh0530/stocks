@@ -6,12 +6,30 @@ import { useParams } from "react-router-dom";
 import { appScriptURL } from "../utils/Constants";
 
 export default function Single() {
+  const resultTemplate = {
+    profile: {
+      fullName: "",
+      accuracy: {
+        success: 0,
+        total: 0,
+        percentage: "",
+      },
+      // action: "",
+      // status: "",
+    },
+    data: {
+      old: [],
+      current: [],
+    },
+  };
   const { country, symbol } = useParams();
-  const [profile, setProfile] = useState({});
+  const [profile, setProfile] = useState(resultTemplate.profile);
   const [oldDataSource, setOldDataSource] = useState([]);
   const [currentDataSource, setCurrentDataSource] = useState([]);
+  const [error, setError] = useState({});
 
   useEffect(() => {
+    message.loading({ content: "Loading...", key: "loading" });
     axios({
       url: appScriptURL,
       params: {
@@ -28,35 +46,22 @@ export default function Single() {
         if (res.error) {
           console.error(res.error);
           // message.error("Something went wrong. Please try again later");
-          return (
-            <div>
-              <h2>Sorry, we don't have this stock in our database.</h2>
-              <h2>Please try other stocks. Thank you!</h2>
-            </div>
-          );
+          setError({
+            error: (
+              <div>
+                <h2>Sorry, we don't have this stock in our database.</h2>
+                <h2>Please try other stocks.</h2>
+              </div>
+            ),
+          });
         }
         // eslint-disable-next-line no-unused-vars
-        const resultTemplate = {
-          profile: {
-            fullName: "",
-            accuracy: {
-              success: 0,
-              total: 0,
-              percentage: "",
-            },
-            // action: "",
-            // status: "",
-          },
-          data: {
-            old: [],
-            current: [],
-          },
-        };
 
         document.title = `${symbol} - ${res.fullName} | Stocks`;
         setProfile(res.profile);
         setOldDataSource(res.data.old);
         setCurrentDataSource(res.data.current);
+        message.success({ content: "Finished", key: "loading" });
       })
       .catch((err) => {
         console.error(err);
@@ -91,8 +96,8 @@ export default function Single() {
       <div>
         <Descriptions title={symbolTitle}>
           <Descriptions.Item label="準確率">
-            {/* {profile.accuracy.percentage}% ({profile.accuracy.success} /{" "}
-            {profile.accuracy.total}) */}
+            {profile.accuracy.percentage}% ({profile.accuracy.success} /{" "}
+            {profile.accuracy.total})
           </Descriptions.Item>
           {/* <Descriptions.Item label="策略">買/賣</Descriptions.Item>
           <Descriptions.Item label="股價狀態">漲/跌</Descriptions.Item> */}
@@ -140,38 +145,38 @@ const oldStockColumns = [
   },
   {
     title: "買點",
-    dataIndex: "notifyBuy",
-    key: "notifyBuy",
+    dataIndex: "buy",
+    key: "buy",
     align: "right",
     width: 100,
     defaultSortOrder: "descend",
     render: (text, row, index) => {
       return (
         <p style={{ textAlign: "right" }}>
-          <span>{row.notifyBuy.price}</span>
+          <span>{row.buy.price}</span>
           <br />
-          <small>{row.notifyBuy.date}</small>
+          <small>{row.buy.date}</small>
         </p>
       );
     },
     sorter: (a, b) => {
-      const aDate = new Date(a.notifyBuy.date);
-      const bDate = new Date(b.notifyBuy.date);
+      const aDate = new Date(a.buy.date);
+      const bDate = new Date(b.buy.date);
       return aDate - bDate;
     },
   },
   {
     title: "賣點",
-    dataIndex: "notifySell",
-    key: "notifySell",
+    dataIndex: "sell",
+    key: "sell",
     align: "right",
     width: 100,
     render: (text, row, index) => {
       return (
         <p style={{ textAlign: "right" }}>
-          <span>{row.notifySell.price}</span>
+          <span>{row.sell.price}</span>
           <br />
-          <small>{row.notifySell.date}</small>
+          <small>{row.sell.date}</small>
         </p>
       );
     },
@@ -268,7 +273,7 @@ const templateOldStockData = {
     date: "1/5/2021",
     price: 51.6,
   },
-  notifyBuy: {
+  buy: {
     date: "1/15/2021",
     price: 40.1,
     difference: {
@@ -277,7 +282,7 @@ const templateOldStockData = {
     },
     index: 3691,
   },
-  notifySell: {
+  sell: {
     date: "1/15/2021",
     price: 40.1,
     difference: {
