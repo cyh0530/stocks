@@ -7,6 +7,12 @@ export default function Main({ stockData }) {
   const [tabPanes, setTabPanes] = useState([]);
   const { TabPane } = Tabs;
 
+  const temp = {
+    TPE: "TW",
+    NASDAQ: "US",
+    NYSE: "US",
+  };
+
   useEffect(() => {
     // parse raw data to website required format
     const tabs = [];
@@ -29,7 +35,7 @@ export default function Main({ stockData }) {
           if (categoryData.length > 0) {
             categories[category].push({
               key: categories[category].length,
-              exchanges: exchanges,
+              country: temp[exchanges],
               stock: symbol,
               fullName,
               subDataSource: categoryData,
