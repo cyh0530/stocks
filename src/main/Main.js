@@ -197,45 +197,30 @@ const columns = [
       } else if (differencePoint < 0) {
         style.color = "green";
       }
-      return (
-        <p>
-          <Link to={`/${row.country}/${row.stock}`}>
-            {text.padEnd(6)} <span> - {fullName}</span>
-          </Link>
-          <br />
-          <span style={style}>
-            ${allData[0].current.price} ({differencePoint}, {differencePct})
-          </span>
-        </p>
-      );
-    },
-    sorter: (a, b) => a.stock - b.stock,
-  },
-  {
-    title: "行為",
-    dataIndex: "action",
-    key: "action",
-    align: "right",
-    width: 100,
-    render: (text, row, index) => {
-      const allData = row.subDataSource;
       let action = "買";
-      let style = { color: "red" };
 
       for (let data of allData) {
         if (data.action === "sell") {
           action = "賣";
-          style.color = "green";
           break;
         }
       }
 
       return (
-        <p style={style}>
-          <span>{action}</span>
+        <p>
+          <Link to={`/${row.country}/${row.stock}`}>
+            {text.padEnd(6)} <br />
+            {fullName}
+          </Link>
+          <br />
+          <span style={style}>
+            ${allData[0].current.price} ({differencePoint}, {differencePct})
+            <span>{action}</span>
+          </span>
         </p>
       );
     },
+    sorter: (a, b) => a.stock - b.stock,
   },
   {
     title: "最大漲速(週)",

@@ -37,13 +37,11 @@ export const singleStockColumns = [
     width: 100,
     render: (text, row, index) => {
       let style = { textAlign: "right" };
-      let action;
-      if (text === "buy") {
+      let action = text;
+      if (text === "買") {
         style.color = "red";
-        action = "買";
-      } else if (text === "sell") {
+      } else if (text === "賣") {
         style.color = "green";
-        action = "賣";
       }
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
