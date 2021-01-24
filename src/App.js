@@ -151,16 +151,16 @@ const Header = () => {
     <div style={{ width: "100%" }}>
       <div style={{ width: "95%", margin: "auto" }}>
         <Row>
-          <Col xs={24} sm={24} md={6} lg={6} xl={5} xxl={4}>
+          <Col xs={8} sm={8} md={6} lg={6} xl={5} xxl={4}>
             <h1>
               <Link to="/" style={{ color: "black" }}>
                 Stocks
               </Link>
-            </h1>{" "}
+            </h1>
           </Col>
           <Col
-            xs={0}
-            sm={0}
+            xs={16}
+            sm={16}
             md={18}
             lg={18}
             xl={19}
