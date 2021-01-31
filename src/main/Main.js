@@ -233,14 +233,50 @@ const columns = [
       let maxSpeed = 0,
         maxSpeedPct = 0;
       for (let data of allData) {
-        const priceDiff = data.predict.price - data.current.price;
-        const dateDiffMillis =
-          new Date(data.predict.date) - new Date(data.current.date);
-        if (dateDiffMillis <= 0) continue;
-        const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
-        const speed =
-          Math.round((priceDiff / ((dateDiff / 7) * 5)) * 100) / 100;
-        const speedPct = Math.round((speed / dateDiff) * 10000) / 100;
+
+        const middleDate = new Date(data.middle.date);
+        const currentDate = new Date(data.current.date);
+        const predictDate = new Date(data.predict.date);
+
+        const currentPriceDiff = data.current.price - data.middle.price;
+        const currentDateDiffMillis = currentDate - middleDate;
+        const currentDateDiff = currentDateDiffMillis / (1000 * 60 * 60 * 24);
+        let currentSpeed, currentSpeedPct;
+        if (currentDateDiff <= 0) {
+          currentSpeed = 0;
+          currentSpeedPct = 0;
+        } else {
+          currentSpeed =
+            Math.round((currentPriceDiff / ((currentDateDiff / 7) * 5)) * 100) /
+            100;
+          currentSpeedPct =
+            Math.round((currentSpeed / currentDateDiff) * 10000) / 100;
+        }
+
+        const expectPriceDiff = data.predict.price - data.middle.price;
+        const expectDateDiffMillis = predictDate - middleDate;
+        const expectDateDiff = expectDateDiffMillis / (1000 * 60 * 60 * 24);
+        let expectSpeed, expectSpeedPct;
+        if (expectDateDiff <= 0) {
+          expectSpeed = 0;
+          expectSpeedPct = 0;
+        } else {
+          expectSpeed =
+            Math.round((expectPriceDiff / ((expectDateDiff / 7) * 5)) * 100) /
+            100;
+          expectSpeedPct =
+            Math.round((expectSpeed / expectDateDiff) * 10000) / 100;
+        }
+
+        let speedPct = expectSpeedPct;
+        let speed = expectSpeed;
+
+        if (currentDateDiffMillis / expectDateDiffMillis >= 0.1) {
+          if (currentSpeedPct < expectSpeedPct) {
+            speedPct = currentSpeedPct;
+            speed = speedPct;
+          }
+        }
 
         if (speedPct > maxSpeedPct) {
           maxSpeedPct = speedPct;

@@ -50,7 +50,9 @@ export const singleStockColumns = [
       }
       return (
         <p style={style}>
-          <span>{action}</span>
+          {action}
+          <br />
+          {row.message}
         </p>
       );
     },
@@ -62,37 +64,62 @@ export const singleStockColumns = [
     align: "right",
     width: 100,
     render: (text, row, index) => {
-      const priceDiff = row.predict.price - row.current.price;
-      const dateDiffMillis =
-        new Date(row.predict.date) - new Date(row.current.date);
-      const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
-      let speed, speedPct;
-      if (dateDiff <= 0) {
-        speed = 0;
-        speedPct = 0;
+      const middleDate = new Date(row.middle.date);
+      const currentDate = new Date(row.current.date);
+      const predictDate = new Date(row.predict.date);
+
+      const currentPriceDiff = row.current.price - row.middle.price;
+      const currentDateDiffMillis = currentDate - middleDate;
+      const currentDateDiff = currentDateDiffMillis / (1000 * 60 * 60 * 24);
+      let currentSpeed, currentSpeedPct;
+      if (currentDateDiff <= 0) {
+        currentSpeed = 0;
+        currentSpeedPct = 0;
       } else {
-        speed = Math.round((priceDiff / ((dateDiff / 7) * 5)) * 100) / 100;
-        speedPct = Math.round((speed / dateDiff) * 10000) / 100;
+        currentSpeed =
+          Math.round((currentPriceDiff / ((currentDateDiff / 7) * 5)) * 100) /
+          100;
+        currentSpeedPct =
+          Math.round((currentSpeed / currentDateDiff) * 10000) / 100;
+      }
+
+      const expectPriceDiff = row.predict.price - row.middle.price;
+      const expectDateDiffMillis = predictDate - middleDate;
+      const expectDateDiff = expectDateDiffMillis / (1000 * 60 * 60 * 24);
+      let expectSpeed, expectSpeedPct;
+      if (expectDateDiff <= 0) {
+        expectSpeed = 0;
+        expectSpeedPct = 0;
+      } else {
+        expectSpeed =
+          Math.round((expectPriceDiff / ((expectDateDiff / 7) * 5)) * 100) /
+          100;
+        expectSpeedPct =
+          Math.round((expectSpeed / expectDateDiff) * 10000) / 100;
       }
 
       let style = { textAlign: "right" };
-      const currentDate = new Date(row.current.date);
-      const predictDate = new Date(row.predict.date);
+
       if (predictDate < currentDate) {
         style.color = "gray";
       }
 
       return (
         <p style={style}>
-          <span>{speedPct}%</span>
-          <br />
-          <small>{speed}</small>
+          {currentDateDiffMillis / expectDateDiffMillis >= 0.05 ? (
+            <>
+              實際: {currentSpeedPct}% <small>({currentSpeed})</small>
+              <br />
+            </>
+          ) : null}
+          預期: {expectSpeedPct}% <small>({expectSpeed})</small>
         </p>
       );
     },
-    defaultSortOrder: "descend",
     sorter: (a, b) => {
       const currentDate = new Date(a.current.date);
+      const aMiddleDate = new Date(a.middle.date);
+      const bMiddleDate = new Date(b.middle.date);
       const aPredictDate = new Date(a.predict.date);
       const bPredictDate = new Date(b.predict.date);
 
@@ -104,21 +131,48 @@ export const singleStockColumns = [
         return 1;
       }
 
-      const aPriceDiff = a.predict.price - a.current.price;
-      const aDateDiffMillis =
-        new Date(a.predict.date) - new Date(a.current.date);
-      const aDateDiff = aDateDiffMillis / (1000 * 60 * 60 * 24);
-      const aSpeed =
-        Math.round((aPriceDiff / ((aDateDiff / 7) * 5)) * 100) / 100;
-      const aSpeedPct = aSpeed / aDateDiff;
+      const aCurrentPriceDiff = a.current.price - a.middle.price;
+      const aCurrentDateDiffMillis = currentDate - aMiddleDate;
+      const aCurrentDateDiff = aCurrentDateDiffMillis / (1000 * 60 * 60 * 24);
+      const aCurrentSpeed =
+        Math.round((aCurrentPriceDiff / ((aCurrentDateDiff / 7) * 5)) * 100) /
+        100;
+      const aCurrentSpeedPct = aCurrentSpeed / aCurrentDateDiff;
 
-      const bPriceDiff = b.predict.price - b.current.price;
-      const bDateDiffMillis =
-        new Date(b.predict.date) - new Date(b.current.date);
-      const bDateDiff = bDateDiffMillis / (1000 * 60 * 60 * 24);
-      const bSpeed =
-        Math.round((bPriceDiff / ((bDateDiff / 7) * 5)) * 100) / 100;
-      const bSpeedPct = bSpeed / bDateDiff;
+      const aExpectPriceDiff = a.predict.price - a.middle.price;
+      const aExpectDateDiffMillis = aPredictDate - aMiddleDate;
+      const aExpectDateDiff = aExpectDateDiffMillis / (1000 * 60 * 60 * 24);
+      const aExpectSpeed =
+        Math.round((aExpectPriceDiff / ((aExpectDateDiff / 7) * 5)) * 100) /
+        100;
+      const aExpectSpeedPct = aExpectSpeed / aExpectDateDiff;
+
+      let aSpeedPct = aExpectSpeedPct;
+
+      if (aCurrentDateDiffMillis / aExpectDateDiffMillis >= 0.1) {
+        aSpeedPct = Math.min(aCurrentSpeedPct, aExpectSpeedPct);
+      }
+
+      const bCurrentPriceDiff = b.current.price - b.middle.price;
+      const bCurrentDateDiffMillis = currentDate - bMiddleDate;
+      const bDateDiff = bCurrentDateDiffMillis / (1000 * 60 * 60 * 24);
+      const bCurrentSpeed =
+        Math.round((bCurrentPriceDiff / ((bDateDiff / 7) * 5)) * 100) / 100;
+      const bCurrentSpeedPct = bCurrentSpeed / bDateDiff;
+
+      const bExpectPriceDiff = b.predict.price - b.middle.price;
+      const bExpectDateDiffMillis = bPredictDate - bMiddleDate;
+      const bExpectDateDiff = bExpectDateDiffMillis / (1000 * 60 * 60 * 24);
+      const bExpectSpeed =
+        Math.round((bExpectPriceDiff / ((bExpectDateDiff / 7) * 5)) * 100) /
+        100;
+      const bExpectSpeedPct = bExpectSpeed / bExpectDateDiff;
+
+      let bSpeedPct = bExpectSpeedPct;
+
+      if (bCurrentDateDiffMillis / bExpectDateDiffMillis >= 0.1) {
+        bSpeedPct = Math.min(bCurrentSpeedPct, bExpectSpeedPct);
+      }
 
       return aSpeedPct - bSpeedPct;
     },
@@ -260,6 +314,7 @@ export const singleStockColumns = [
     key: "predict",
     align: "right",
     width: 100,
+    defaultSortOrder: "ascend",
     render: (text, row, index) => {
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
@@ -267,7 +322,7 @@ export const singleStockColumns = [
       if (predictDate < currentDate) {
         style.color = "gray";
       }
-      
+
       return (
         <p style={style}>
           <span>{row.predict.price}</span>
