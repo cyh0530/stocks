@@ -3,6 +3,7 @@ import { Select, Row, Col, message } from "antd";
 import { BrowserRouter, Switch, Route, Link } from "react-router-dom";
 import axios from "axios";
 import { parse } from "node-html-parser";
+import { decode } from "html-entities";
 import Single from "./single/Single";
 import Main from "./main/Main";
 import { appScriptURL, summaryLink } from "./utils/Constants";
@@ -57,7 +58,7 @@ function App() {
           let index = 2;
           for (index = 2; index < tr.childNodes.length; index++) {
             const td = tr.childNodes[index];
-            const text = td.innerText.replace(/&quot;/g, '"').replace(/&apos;/g, '\'');
+            const text = decode(td.innerText);
             if (text === "") break;
             const parsedText = JSON.parse(text);
             data[value.name] = { ...data[value.name], ...parsedText };
