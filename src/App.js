@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Select, Row, Col, message } from "antd";
-import { BrowserRouter, Switch, Route, Link } from "react-router-dom";
+import { HashRouter, Switch, Route, Link } from "react-router-dom";
 import axios from "axios";
 import { parse } from "node-html-parser";
 import { decode } from "html-entities";
@@ -83,7 +83,7 @@ function App() {
 
   return (
     <div style={{ padding: 10 }}>
-      <BrowserRouter basename="/stocks">
+      <HashRouter basename="/stocks">
         <Header></Header>
         <div style={{ width: "95%", margin: "auto" }}>
           <Switch>
@@ -93,7 +93,7 @@ function App() {
             </Route>
           </Switch>
         </div>
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 }
