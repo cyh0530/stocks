@@ -1,72 +1,142 @@
 import React, { useState, useEffect } from "react";
-import { Rate, Table, message, Descriptions } from "antd";
+import { Rate, Table, message, Descriptions, Skeleton } from "antd";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { singleStockColumns } from "../utils/Constants";
 import { useParams } from "react-router-dom";
 import { appScriptURL } from "../utils/Constants";
 
 export default function Single() {
-  const resultTemplate = {
-    profile: {
-      fullName: "",
-      accuracy: {
-        success: 0,
-        total: 0,
-        percentage: "",
-      },
-      // action: "",
-      // status: "",
-    },
-    data: {
-      old: [],
-      current: [],
-    },
-  };
   const { country, symbol } = useParams();
-  const [profile, setProfile] = useState(resultTemplate.profile);
+  const [header, setHeader] = useState(false);
   const [oldDataSource, setOldDataSource] = useState([]);
   const [currentDataSource, setCurrentDataSource] = useState([]);
   const [error, setError] = useState({});
+  const [finishFetching, setFinishFetching] = useState(false);
 
-  useEffect(() => {
-    message.loading({ content: "Loading...", key: "loading" });
-    axios({
-      url: appScriptURL,
-      params: {
-        mode: "single",
-        country: country.toUpperCase(),
-        symbol: symbol.toUpperCase(),
-      },
-    })
-      .then((res) => {
+  const fetchData = async () => {
+    try {
+      const data = await axios({
+        url: appScriptURL,
+        params: {
+          mode: "single",
+          country: country.toUpperCase(),
+          symbol: symbol.toUpperCase(),
+        },
+      }).then((res) => {
         return res.data;
-      })
-      .then((res) => {
-        console.log(res);
-        if (res.error) {
-          console.error(res.error);
-          // message.error("Something went wrong. Please try again later");
-          setError({
-            error: (
-              <div>
-                <h2>Sorry, we don't have this stock in our database.</h2>
-                <h2>Please try other stocks.</h2>
-              </div>
-            ),
-          });
-        }
-        // eslint-disable-next-line no-unused-vars
-
-        document.title = `${symbol} - ${res.fullName} | Stocks`;
-        setProfile(res.profile);
-        setOldDataSource(res.data.old);
-        setCurrentDataSource(res.data.current);
-        message.success({ content: "Finished", key: "loading" });
-      })
-      .catch((err) => {
-        console.error(err);
-        message.error("Unable to fetch data. Please try again later.");
       });
+
+      console.log(data);
+      if (data.error) {
+        console.error(data.error);
+        // message.error("Something went wrong. Please try again later");
+        setError({
+          error: (
+            <div>
+              <h2>Sorry, we don't have this stock in our database.</h2>
+              <h2>Please try other stocks.</h2>
+            </div>
+          ),
+        });
+        return;
+      }
+
+      document.title = `${symbol} - ${data.profile.fullName} | Stocks`;
+      setOldDataSource(data.data.old);
+      setCurrentDataSource(data.data.current);
+      const profile = data.profile;
+
+      const profileTemplate = {
+        profile: {
+          fullName: "",
+          accuracy: {
+            success: 0,
+            total: 0,
+            percentage: "",
+          },
+          price: 0,
+          date: new Date(),
+          difference: {
+            points: 0,
+            percentage: 0,
+          },
+          // action: "",
+          // status: "",
+        },
+        data: {
+          old: [],
+          current: [],
+        },
+      };
+
+      let price;
+
+      if (profile.difference.points < 0) {
+        price = (
+          <span style={{ color: "green" }}>
+            {profile.price} {"  "} {profile.difference.points} (
+            {profile.difference.percentage}%)
+          </span>
+        );
+      } else if (profile.difference.points > 0) {
+        price = (
+          <span style={{ color: "red" }}>
+            {profile.price} {"  "} +{profile.difference.points} (+
+            {profile.difference.percentage}%)
+          </span>
+        );
+      } else {
+        price = (
+          <span>
+            {profile.price}
+            {"  "} +{profile.difference.points} (+
+            {profile.difference.percentage}%)
+          </span>
+        );
+      }
+
+      let yahooLink;
+      if (country !== "US") {
+        yahooLink = `https://finance.yahoo.com/chart/${symbol}.${country}`;
+      } else {
+        yahooLink = `https://finance.yahoo.com/chart/${symbol}`;
+      }
+
+      const symbolTitle = (
+        <>
+          {profile.fullName} ({symbol}){" "}
+          <Rate count={1} onChange={onFavoriteChange} />{" "}
+          <a href={yahooLink} target="_blank" rel="noreferrer noopener">
+            Yahoo Finance <FontAwesomeIcon icon={faExternalLinkAlt} />
+          </a>
+          <br />
+          {price}
+          <br />
+          <small>{new Date(profile.date).toLocaleDateString()}</small>
+        </>
+      );
+      setHeader(
+        <div>
+          <Descriptions title={symbolTitle}>
+            <Descriptions.Item label="準確率">
+              {profile.accuracy.percentage}% ({profile.accuracy.success} /{" "}
+              {profile.accuracy.total})
+            </Descriptions.Item>
+            {/* <Descriptions.Item label="策略">買/賣</Descriptions.Item>
+        <Descriptions.Item label="股價狀態">漲/跌</Descriptions.Item> */}
+          </Descriptions>
+        </div>
+      );
+      setFinishFetching(true)
+    } catch (e) {
+      console.error(e);
+      message.error("Unable to fetch data. Please try again later.");
+    }
+  };
+  useEffect(() => {
+    fetchData();
   }, [country, symbol]);
 
   const onFavoriteChange = (value) => {
@@ -85,36 +155,39 @@ export default function Single() {
     localStorage.setItem("favorite", JSON.stringify(favorite));
   };
 
-  const symbolTitle = (
-    <>
-      {profile.fullName} ({symbol}){" "}
-      <Rate count={1} onChange={onFavoriteChange} />
-    </>
-  );
   return (
     <div>
-      <div>
-        <Descriptions title={symbolTitle}>
-          <Descriptions.Item label="準確率">
-            {profile.accuracy.percentage}% ({profile.accuracy.success} /{" "}
-            {profile.accuracy.total})
-          </Descriptions.Item>
-          {/* <Descriptions.Item label="策略">買/賣</Descriptions.Item>
-          <Descriptions.Item label="股價狀態">漲/跌</Descriptions.Item> */}
-        </Descriptions>
-      </div>
-      <div>
-        <Table columns={singleStockColumns} dateSource={currentDataSource} />
-      </div>
-      <div>
-        <h3>過往紀錄</h3>
-        <Table columns={oldStockColumns} dateSource={oldDataSource} />
-      </div>
+      {finishFetching ? header : <Skeleton active />}
+      {finishFetching ? (
+        <div>
+          <Table
+            columns={singleStockColumns}
+            dataSource={currentDataSource}
+            size="small"
+            pagination={{ defaultPageSize: 5 }}
+          />
+        </div>
+      ) : (
+        <Skeleton active />
+      )}
+      {finishFetching ? (
+        <div>
+          <h3>過往紀錄</h3>
+          <Table
+            columns={oldStockColumns}
+            dataSource={oldDataSource}
+            size="small"
+          />
+        </div>
+      ) : (
+        <Skeleton active />
+      )}
     </div>
   );
 }
 
 const oldStockColumns = [
+  { title: "訊息", dataIndex: "message", key: "message", width: 100 },
   {
     title: "獲利",
     dataIndex: "gain",
@@ -129,7 +202,7 @@ const oldStockColumns = [
         style.color = "green";
       }
       return (
-        <p style={style}>
+        <span style={style}>
           <span>
             {row.gain.price > 0 ? "+" : ""}
             {row.gain.price}
@@ -139,7 +212,7 @@ const oldStockColumns = [
             {row.gain.price > 0 ? "+" : ""}
             {row.gain.percentage}
           </small>
-        </p>
+        </span>
       );
     },
   },
@@ -152,11 +225,11 @@ const oldStockColumns = [
     defaultSortOrder: "descend",
     render: (text, row, index) => {
       return (
-        <p style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }}>
           <span>{row.buy.price}</span>
           <br />
           <small>{row.buy.date}</small>
-        </p>
+        </span>
       );
     },
     sorter: (a, b) => {
@@ -173,11 +246,11 @@ const oldStockColumns = [
     width: 100,
     render: (text, row, index) => {
       return (
-        <p style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }}>
           <span>{row.sell.price}</span>
           <br />
           <small>{row.sell.date}</small>
-        </p>
+        </span>
       );
     },
   },
@@ -189,11 +262,11 @@ const oldStockColumns = [
     width: 100,
     render: (text, row, index) => {
       return (
-        <p style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }}>
           <span>{row.start.price}</span>
           <br />
           <small>{row.start.date}</small>
-        </p>
+        </span>
       );
     },
   },
@@ -205,13 +278,13 @@ const oldStockColumns = [
     width: 100,
     render: (text, row, index) => {
       return (
-        <p style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }}>
           <span>{row.middle.price}</span>
           <br />
           <span>{row.middle.difference.percentage}%</span>
           <br />
           <small>{row.middle.date}</small>
-        </p>
+        </span>
       );
     },
   },
@@ -229,11 +302,11 @@ const oldStockColumns = [
         style.color = "red";
       }
       return (
-        <p style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }}>
           <span>{row.predict.price}</span>
           <br />
           <small style={style}>{row.predict.date}</small>
-        </p>
+        </span>
       );
     },
     sorter: (a, b) => a.predict.price - b.predict.price,
