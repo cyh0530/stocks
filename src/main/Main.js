@@ -198,16 +198,18 @@ const columns = [
         style.color = "green";
       }
       let action = "買";
+      let actionStyle = { color: "red" };
 
       for (let data of allData) {
-        if (data.action === "sell") {
+        if (data.action === "賣") {
           action = "賣";
+          actionStyle.color = "green";
           break;
         }
       }
 
       return (
-        <p>
+        <span>
           <Link to={`/${row.country}/${row.stock}`}>
             {text.padEnd(6)} <br />
             {fullName}
@@ -215,9 +217,10 @@ const columns = [
           <br />
           <span style={style}>
             ${allData[0].current.price} ({differencePoint}, {differencePct})
-            <span>{action}</span>
+            <br />
           </span>
-        </p>
+          <span style={actionStyle}>{action}</span>
+        </span>
       );
     },
     sorter: (a, b) => a.stock - b.stock,
@@ -285,11 +288,11 @@ const columns = [
       }
 
       return (
-        <p>
+        <span>
           <span>{maxSpeedPct}%</span>
           <br />
           <small>{maxSpeed}</small>
-        </p>
+        </span>
       );
     },
     defaultSortOrder: "descend",
@@ -358,11 +361,11 @@ const columns = [
       const price = min === max ? min : `${min} - ${max}`;
       const pct = minPct === maxPct ? minPct : `${minPct} - ${maxPct}`;
       return (
-        <p>
+        <span>
           <span>{price} </span>
           <br />
           <small>{pct} </small>
-        </p>
+        </span>
       );
     },
     sorter: (a, b) => {
@@ -408,9 +411,9 @@ const columns = [
   //     const allData = row.subDataSource;
 
   //     return (
-  //       <p>
+  //       <span>
   //         <span style={style}>{allData[0].current.price} </span>
-  //       </p>
+  //       </span>
   //     );
   //   },
   // },
@@ -420,11 +423,11 @@ const columns = [
   //   key: "buy",
   //   render: (text, row, index) => {
   //     return (
-  //       <p style={{ textAlign: "right" }}>
+  //       <span style={{ textAlign: "right" }}>
   //         <span>{row.buy.price}</span>
   //         <br />
   //         <small>{row.buy.date}</small>
-  //       </p>
+  //       </span>
   //     );
   //   },
   // },
@@ -434,11 +437,11 @@ const columns = [
   //   key: "start",
   //   render: (text, row, index) => {
   //     return (
-  //       <p style={{ textAlign: "right" }}>
+  //       <span style={{ textAlign: "right" }}>
   //         <span>{row.start.price}</span>
   //         <br />
   //         <small>{row.start.date}</small>
-  //       </p>
+  //       </span>
   //     );
   //   },
   // },
@@ -454,11 +457,11 @@ const columns = [
   //       style.color = "red";
   //     }
   //     return (
-  //       <p style={style}>
+  //       <span style={style}>
   //         <span>{(row.current.price - row.buy.price).toFixed(2)}</span>
   //         <br />
   //         <small>{(row.current.price / row.buy.price).toFixed(2)}%</small>
-  //       </p>
+  //       </span>
   //     );
   //   },
   // },
@@ -487,11 +490,11 @@ const columns = [
       const price = min === max ? min : `${min} - ${max}`;
       const date = min === max ? minDate : `${minDate} - ${maxDate}`;
       return (
-        <p>
+        <span>
           <span>{price} </span>
           <br />
           <small>{date} </small>
-        </p>
+        </span>
       );
     },
   } /*
@@ -510,11 +513,11 @@ const columns = [
           }
         }
         return (
-          <p style={{ textAlign: "right" }}>
+          <span style={{ textAlign: "right" }}>
             <span>{max}</span>
             <br />
             <small>{maxDate}</small>
-          </p>
+          </span>
         );
       },
       sorter: (a, b) => a.predict.price - b.predict.price,
