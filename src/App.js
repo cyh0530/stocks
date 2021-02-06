@@ -126,7 +126,7 @@ const Header = () => {
   ];
 
   const onSelect = (value) => {
-    window.location.href = "/stocks/" + value;
+    window.location.href = "/stocks/#/" + value;
   };
 
   const filterOption = (input, option) => {
