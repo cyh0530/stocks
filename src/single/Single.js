@@ -8,13 +8,15 @@ import { useParams } from "react-router-dom";
 import { appScriptURL } from "../utils/Constants";
 
 export default function Single() {
-  const { country, symbol } = useParams();
+  let { country, symbol } = useParams();
   const [header, setHeader] = useState(false);
   const [oldDataSource, setOldDataSource] = useState([]);
   const [currentDataSource, setCurrentDataSource] = useState([]);
   const [error, setError] = useState({});
   const [finishFetching, setFinishFetching] = useState(false);
 
+  country = country.toUpperCase();
+  symbol = symbol.toUpperCase();
   const fetchData = async () => {
     try {
       const data = await axios({
