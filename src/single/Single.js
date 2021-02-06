@@ -10,15 +10,16 @@ import { appScriptURL } from "../utils/Constants";
 export default function Single() {
   let { country, symbol } = useParams();
   const [header, setHeader] = useState(false);
-  const [oldDataSource, setOldDataSource] = useState([]);
-  const [currentDataSource, setCurrentDataSource] = useState([]);
+  const [dataSource, setDataSource] = useState({})
   const [error, setError] = useState({});
   const [finishFetching, setFinishFetching] = useState(false);
 
   country = country.toUpperCase();
   symbol = symbol.toUpperCase();
+
   const fetchData = async () => {
     try {
+      setFinishFetching(false);
       const data = await axios({
         url: appScriptURL,
         params: {
@@ -46,8 +47,7 @@ export default function Single() {
       }
 
       document.title = `${symbol} - ${data.profile.fullName} | Stocks`;
-      setOldDataSource(data.data.old);
-      setCurrentDataSource(data.data.current);
+      setDataSource({...data.data})
       const profile = data.profile;
 
       const profileTemplate = {
@@ -131,7 +131,7 @@ export default function Single() {
           </Descriptions>
         </div>
       );
-      setFinishFetching(true)
+      setFinishFetching(true);
     } catch (e) {
       console.error(e);
       message.error("Unable to fetch data. Please try again later.");
@@ -157,6 +157,10 @@ export default function Single() {
     localStorage.setItem("favorite", JSON.stringify(favorite));
   };
 
+  if (Object.keys(error).length > 0) {
+    return error.error;
+  }
+
   return (
     <div>
       {finishFetching ? header : <Skeleton active />}
@@ -164,7 +168,7 @@ export default function Single() {
         <div>
           <Table
             columns={singleStockColumns}
-            dataSource={currentDataSource}
+            dataSource={dataSource.current}
             size="small"
             pagination={{ defaultPageSize: 5 }}
           />
@@ -177,7 +181,7 @@ export default function Single() {
           <h3>過往紀錄</h3>
           <Table
             columns={oldStockColumns}
-            dataSource={oldDataSource}
+            dataSource={dataSource.old}
             size="small"
           />
         </div>
