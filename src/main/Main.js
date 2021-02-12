@@ -1,24 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tabs } from "antd";
+import { Table, Tabs, Skeleton } from "antd";
 import { Link } from "react-router-dom";
 import { singleStockColumns, tabName } from "../utils/Constants";
 
-export default function Main({ stockData }) {
+export default function Main({ stockData, activeTab, setActiveTab }) {
   const [tabPanes, setTabPanes] = useState([]);
   const { TabPane } = Tabs;
-
-  const temp = {
-    TPE: "TW",
-    NASDAQ: "US",
-    NYSE: "US",
-  };
-
+  document.title = "Stocks";
   useEffect(() => {
+    const exchangesToCountry = {
+      TPE: "TW",
+      NASDAQ: "US",
+      NYSE: "US",
+      HKG: "HK",
+    };
     // parse raw data to website required format
     const tabs = [];
     for (let exchanges in stockData) {
       const subTabs = [];
-      const exchangesAllData = stockData[exchanges];
+
+      if (stockData[exchanges].notFetched) continue;
+      const exchangesAllData = stockData[exchanges].data;
+
+      if (!exchangesAllData) continue;
+      const date = stockData[exchanges].date;
       let categories = {};
       const firstKey = Object.keys(exchangesAllData)[0];
       const firstData = exchangesAllData[firstKey].data;
@@ -35,7 +40,7 @@ export default function Main({ stockData }) {
           if (categoryData.length > 0) {
             categories[category].push({
               key: categories[category].length,
-              country: temp[exchanges],
+              country: exchangesToCountry[exchanges],
               stock: symbol,
               fullName,
               subDataSource: categoryData,
@@ -53,6 +58,7 @@ export default function Main({ stockData }) {
 
       tabs.push({
         exchanges,
+        date,
         subTabs,
       });
     }
@@ -61,6 +67,7 @@ export default function Main({ stockData }) {
     const templateTab = [
       {
         exchanges: "TPE",
+        date: "12/12/2020",
         subTabs: [
           {
             tabName: "Today New",
@@ -89,30 +96,57 @@ export default function Main({ stockData }) {
     setTabPanes(tabs);
   }, [stockData]);
 
+  const changeTab = (key) => {
+    setActiveTab({ exchanges: key, subTab: 0 });
+  };
+
+  const changeSubTab = (key) => {
+    setActiveTab({ ...activeTab, subTab: key });
+  };
   return (
-    <Tabs defaultActiveKey="0">
-      {tabPanes.map((tab, index) => (
-        <TabPane tab={tab.exchanges} key={index}>
-          <Tabs defaultActiveKey="0">
-            {tab.subTabs.map((subTab, index2) => (
-              <TabPane tab={subTab.tabName} key={index2}>
-                <div style={{ margin: "auto" }}>
-                  <Table
-                    key={index2}
-                    size="small"
-                    columns={columns}
-                    bordered
-                    dataSource={subTab.dataSource}
-                    pagination={{ defaultPageSize: 20, hideOnSinglePage: true }}
-                    expandable={{ expandedRowRender, expandRowByClick: true }}
-                    scroll={{ x: 600 }}
-                  />
-                </div>
-              </TabPane>
-            ))}
-          </Tabs>
-        </TabPane>
-      ))}
+    <Tabs defaultActiveKey={activeTab.exchange} onChange={changeTab}>
+      {tabPanes.map((tab) => {
+        if (tab.notFetched) {
+          return <Skeleton active />;
+        } else if (tab.error) {
+          return <h2>{tab.error}</h2>;
+        } else {
+          return (
+            <TabPane tab={tab.exchanges} key={tab.exchanges}>
+              <Tabs defaultActiveKey={activeTab.subTab} onChange={changeSubTab}>
+                {tab.subTabs.map((subTab, index2) => (
+                  <TabPane tab={subTab.tabName} key={index2}>
+                    <div style={{ margin: "auto" }}>
+                      <h4>最後更新: {tab.date}</h4>
+                      <h5>點擊各行以檢視詳細資料</h5>
+                      <Table
+                        key={index2}
+                        size="small"
+                        columns={columns}
+                        bordered
+                        dataSource={subTab.dataSource}
+                        pagination={{
+                          defaultPageSize: 20,
+                          hideOnSinglePage: true,
+                        }}
+                        expandable={{
+                          expandedRowRender,
+                          expandRowByClick: true,
+                          indentSize: 0,
+                          expandIconColumnIndex: -1,
+                        }}
+                        scroll={{ x: 600 }}
+                        sortDirections={["descend", "ascend"]}
+                      />
+                    </div>
+                  </TabPane>
+                ))}
+              </Tabs>
+            </TabPane>
+          );
+        }
+      })}
+
       {/* <TabPane tab="Favorite" key="1">
           <Table
             columns={columns}
@@ -152,7 +186,7 @@ const expandedRowRender = (record) => {
       ...processing,
     });
   }
-  console.log(dataSource);
+
   return (
     <div style={{ margin: "10px 0px" }}>
       <Table
@@ -162,6 +196,7 @@ const expandedRowRender = (record) => {
         bordered
         pagination={{ defaultPageSize: 20, hideOnSinglePage: true }}
         scroll={{ x: 600 }}
+        sortDirections={["descend", "ascend"]}
       />
     </div>
   );
@@ -173,7 +208,7 @@ const columns = [
     dataIndex: "stock",
     key: "stock",
     ellipsis: true,
-    width: 100,
+    // width: 100,
     fixed: "left",
     render: (text, row, index) => {
       const allData = row.subDataSource;
@@ -207,36 +242,52 @@ const columns = [
           break;
         }
       }
+      let yahooLink;
+      if (row.country !== "US") {
+        yahooLink = `https://finance.yahoo.com/chart/${row.stock}.${row.country}`;
+      } else {
+        yahooLink = `https://finance.yahoo.com/chart/${row.stock}`;
+      }
 
       return (
         <span>
-          <Link to={`/${row.country}/${row.stock}`}>
-            {text.padEnd(6)} <br />
-            {fullName}
-          </Link>
+          <Link to={`/${row.country}/${row.stock}`}>{text.padEnd(6)}</Link>
+          {"  "}
+          <a
+            href={yahooLink}
+            target="_blank"
+            rel="noreferrer noopener"
+            style={{ color: "RGB(103, 37, 245)" }}
+          >
+            <strong>
+              <em>Y</em>
+            </strong>
+          </a>
+          <br />
+          <Link to={`/${row.country}/${row.stock}`}>{fullName}</Link>
           <br />
           <span style={style}>
-            ${allData[0].current.price} ({differencePoint}, {differencePct})
+            ${allData[0].current.price}{" "}
+            <span style={actionStyle}>{action}</span>
+            <br />({differencePoint}, {differencePct})
             <br />
           </span>
-          <span style={actionStyle}>{action}</span>
         </span>
       );
     },
-    sorter: (a, b) => a.stock - b.stock,
+    sorter: (a, b) => a.stock.localeCompare(b.stock),
   },
   {
     title: "最大漲速(週)",
     dataIndex: "speed",
     key: "speed",
     align: "right",
-    width: 100,
+    // width: 80,
     render: (text, row, index) => {
       const allData = row.subDataSource;
       let maxSpeed = 0,
         maxSpeedPct = 0;
       for (let data of allData) {
-
         const middleDate = new Date(data.middle.date);
         const currentDate = new Date(data.current.date);
         const predictDate = new Date(data.predict.date);
@@ -295,7 +346,6 @@ const columns = [
         </span>
       );
     },
-    defaultSortOrder: "descend",
     sorter: (a, b) => {
       // sort by max speed
       const aAllData = a.subDataSource;
@@ -340,14 +390,20 @@ const columns = [
     dataIndex: "gain",
     key: "gain",
     align: "right",
-    width: 100,
+    // width: 80,
+    defaultSortOrder: "descend",
     render: (text, row, index) => {
       const allData = row.subDataSource;
       let min = allData[0].gain.price;
       let minPct = allData[0].gain.percentage;
       let max = allData[0].gain.price;
       let maxPct = allData[0].gain.percentage;
+      const currentDate = new Date(allData[0].current.date);
+
       for (let data of allData) {
+        const dataPredictDate = new Date(data.predict.date);
+        if (dataPredictDate <= currentDate) continue;
+
         if (data.gain.price < min) {
           min = data.gain.price;
           minPct = data.gain.percentage;
@@ -369,27 +425,31 @@ const columns = [
       );
     },
     sorter: (a, b) => {
+      const pctToDouble = (pct) => {
+        if (typeof pct === "number") return pct;
+        return parseFloat(pct.substring(0, pct.length - 1));
+      };
       // sort by max profit gain
       const aAllData = a.subDataSource;
-      let aMin = aAllData[0].gain.price;
-      let aMax = aAllData[0].gain.price;
+      let aMin = pctToDouble(aAllData[0].gain.percentage);
+      let aMax = pctToDouble(aAllData[0].gain.percentage);
       const currentDate = new Date(aAllData[0].current.date);
 
       for (let data of aAllData) {
         const dataPredictDate = new Date(data.predict.date);
         if (dataPredictDate <= currentDate) continue;
-        aMin = Math.min(data.gain.price, aMin);
-        aMax = Math.max(data.gain.price, aMax);
+        aMin = Math.min(pctToDouble(data.gain.percentage), aMin);
+        aMax = Math.max(pctToDouble(data.gain.percentage), aMax);
       }
 
       const bAllData = b.subDataSource;
-      let bMin = bAllData[0].gain.price;
-      let bMax = bAllData[0].gain.price;
+      let bMin = pctToDouble(bAllData[0].gain.percentage);
+      let bMax = pctToDouble(bAllData[0].gain.percentage);
       for (let data of bAllData) {
         const dataPredictDate = new Date(data.predict.date);
         if (dataPredictDate <= currentDate) continue;
-        bMin = Math.min(data.gain.price, bMin);
-        bMax = Math.max(data.gain.price, bMax);
+        bMin = Math.min(pctToDouble(data.gain.percentage, bMin));
+        bMax = Math.max(pctToDouble(data.gain.percentage, bMax));
       }
 
       return aMax - bMax;
@@ -470,7 +530,7 @@ const columns = [
     dataIndex: "predict",
     key: "predict",
     align: "right",
-    width: 100,
+    // width: 90,
     render: (text, row, index) => {
       const allData = row.subDataSource;
       let min = allData[0].predict.price;

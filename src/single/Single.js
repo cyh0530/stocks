@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Rate, Table, message, Descriptions, Skeleton } from "antd";
+import { Rate, Table, Descriptions, Skeleton } from "antd";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
@@ -9,8 +9,8 @@ import { appScriptURL } from "../utils/Constants";
 
 export default function Single() {
   let { country, symbol } = useParams();
-  const [header, setHeader] = useState(false);
-  const [dataSource, setDataSource] = useState({})
+  const [header, setHeader] = useState(<></>);
+  const [dataSource, setDataSource] = useState({});
   const [error, setError] = useState({});
   const [finishFetching, setFinishFetching] = useState(false);
 
@@ -20,6 +20,7 @@ export default function Single() {
   const fetchData = async () => {
     try {
       setFinishFetching(false);
+      setError({});
       const data = await axios({
         url: appScriptURL,
         params: {
@@ -34,12 +35,11 @@ export default function Single() {
       console.log(data);
       if (data.error) {
         console.error(data.error);
-        // message.error("Something went wrong. Please try again later");
+
         setError({
           error: (
             <div>
-              <h2>Sorry, we don't have this stock in our database.</h2>
-              <h2>Please try other stocks.</h2>
+              <h2>{data.error}</h2>
             </div>
           ),
         });
@@ -47,9 +47,10 @@ export default function Single() {
       }
 
       document.title = `${symbol} - ${data.profile.fullName} | Stocks`;
-      setDataSource({...data.data})
+      setDataSource({ ...data.data });
       const profile = data.profile;
 
+      // eslint-disable-next-line no-unused-vars
       const profileTemplate = {
         profile: {
           fullName: "",
@@ -110,7 +111,12 @@ export default function Single() {
         <>
           {profile.fullName} ({symbol}){" "}
           <Rate count={1} onChange={onFavoriteChange} />{" "}
-          <a href={yahooLink} target="_blank" rel="noreferrer noopener">
+          <a
+            href={yahooLink}
+            target="_blank"
+            rel="noreferrer noopener"
+            style={{ color: "RGB(103, 37, 245)" }}
+          >
             Yahoo Finance <FontAwesomeIcon icon={faExternalLinkAlt} />
           </a>
           <br />
@@ -134,11 +140,18 @@ export default function Single() {
       setFinishFetching(true);
     } catch (e) {
       console.error(e);
-      message.error("Unable to fetch data. Please try again later.");
+      setError({
+        error: (
+          <div>
+            <h2>Unable to fetch data. Please try again later.</h2>
+          </div>
+        ),
+      });
     }
   };
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country, symbol]);
 
   const onFavoriteChange = (value) => {
@@ -171,6 +184,7 @@ export default function Single() {
             dataSource={dataSource.current}
             size="small"
             pagination={{ defaultPageSize: 5 }}
+            scroll={{ x: 400 }}
           />
         </div>
       ) : (
@@ -183,6 +197,8 @@ export default function Single() {
             columns={oldStockColumns}
             dataSource={dataSource.old}
             size="small"
+            sortDirections={["descend", "ascend"]}
+            scroll={{ x: 480 }}
           />
         </div>
       ) : (
@@ -193,7 +209,14 @@ export default function Single() {
 }
 
 const oldStockColumns = [
-  { title: "訊息", dataIndex: "message", key: "message", width: 100 },
+  {
+    title: "訊息",
+    dataIndex: "message",
+    key: "message",
+    align: "right",
+    fixed: "left",
+    width: 100,
+  },
   {
     title: "獲利",
     dataIndex: "gain",
@@ -228,7 +251,6 @@ const oldStockColumns = [
     key: "buy",
     align: "right",
     width: 100,
-    defaultSortOrder: "descend",
     render: (text, row, index) => {
       return (
         <span style={{ textAlign: "right" }}>
@@ -281,13 +303,16 @@ const oldStockColumns = [
     dataIndex: "middle",
     key: "middle",
     align: "right",
-    width: 100,
+    width: 120,
     render: (text, row, index) => {
       return (
         <span style={{ textAlign: "right" }}>
           <span>{row.middle.price}</span>
           <br />
-          <span>{row.middle.difference.percentage}%</span>
+          <small>
+            ({row.middle.difference.points}, {row.middle.difference.percentage}
+            %)
+          </small>
           <br />
           <small>{row.middle.date}</small>
         </span>
@@ -300,6 +325,7 @@ const oldStockColumns = [
     key: "predict",
     align: "right",
     width: 100,
+    defaultSortOrder: "descend",
     render: (text, row, index) => {
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
