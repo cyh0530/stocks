@@ -1,5 +1,13 @@
-export const summaryLink =
-  "https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vQGMwv4tEoSbTjgtSht6LZ5Vxlwb0Y4Lm1z5Pp0tuBcSaZE9AMTY_isyio7Sc-_C8LHsfv_xMptHeqA/pubhtml";
+export const summaryLink = {
+  TW:
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTICqnaz9FpFBdfQtoM4yhfWVudIxvBgp5s6EolSVN-RRq2wD4dPz3yWIH-5D29QBx-krn71isP4Lmn/pubhtml",
+  NYSE:
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFJ5ulGKfVIGPvKG_QL5Tr2CkV4Qjjm4jQb5LmIwQ-obbUao7SYDCBlO5qtF2VuznRuWY1pejrTB8j/pubhtml",
+  NASDAQ:
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzS1M2eoYGYH-g7Y_u1SCvcwTiAo4CxCjVwkGQzQpz7aQEY7aK3Wow47tpirw6mgKA384CKXU_QlWS/pubhtml",
+  HKG:
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLf9h7gj6CAlqRPAdwuWNvLBNmDzH1SJVexVAoZi_QRkaTDXIaUOK1NUKH-kQIAgl8twlvZjri_hL3/pubhtml",
+};
 
 export const appScriptURL =
   "https://script.google.com/a/uw.edu/macros/s/AKfycbzdeg0uAW8TFykGSnDPjMxYhAayyAfcQEnuByZm7ykEKiXJbdk/exec";
@@ -35,6 +43,7 @@ export const singleStockColumns = [
     key: "action",
     align: "right",
     width: 100,
+    fixed: "left",
     render: (text, row, index) => {
       let style = { textAlign: "right" };
       let action = text;

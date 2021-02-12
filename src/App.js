@@ -9,87 +9,102 @@ import Main from "./main/Main";
 import { appScriptURL, summaryLink } from "./utils/Constants";
 
 function App() {
-  const [stockData, setStockData] = useState({});
+  let stockDataInitial = {};
+  for (let exchange in summaryLink) {
+    stockDataInitial[exchange] = { notFetched: true };
+  }
+  const [stockData, setStockData] = useState(stockDataInitial);
+
+  // eslint-disable-next-line no-unused-vars
+  const stockDataTemplate = {
+    exchange: {
+      date: "2021/01/01",
+      data: {},
+    },
+  };
+
+  const [mainLastActiveTab, setMainLastActiveTab] = useState({
+    exchange: "TW",
+    subTab: 0,
+  });
 
   useEffect(() => {
-    fetchTodayData();
-  }, []);
+    // get summary exchange web url
+    for (let exchange in summaryLink) {
+      // skeleton on
+      // const data = fetchData(summaryLink[exchange]);
 
-  const fetchTodayData = async () => {
-    try {
-      message.loading({ content: "Loading...", key: "loading", duration: 0 });
-      const res = await axios
-        .get(summaryLink)
+      const start = new Date();
+      axios
+        .get(summaryLink[exchange])
         .then((res) => {
           return res.data;
         })
         .then((res) => {
-          return res;
-        });
+          const html = parse(res);
 
-      const html = parse(res);
-      const tabs = new Map();
+          const viewport = html.querySelector("#sheets-viewport");
+          const lastDayTab =
+            viewport.childNodes[viewport.childNodes.length - 1];
+          const id = lastDayTab.id;
+          const sheetMenu = html.querySelector("#sheet-menu");
 
-      const viewport = html.querySelector("#sheets-viewport");
-      viewport.childNodes.forEach((node) => {
-        tabs.set(node.id, { id: node.id, key: node.id });
-      });
+          const date = sheetMenu.querySelector(`#sheet-button-${id}`)
+            .childNodes[0].innerText;
+          const tableBody = viewport.querySelector(`#${id} table tbody`);
 
-      const sheetMenu = html.querySelector("#sheet-menu");
-      tabs.forEach((value, id) => {
-        const tabName = sheetMenu.querySelector(`#sheet-button-${id}`)
-          .childNodes[0].innerText;
-        tabs.set(id, {
-          ...tabs.get(id),
-          name: tabName,
-        });
-      });
-      let data = {};
+          let data = {};
 
-      tabs.forEach((value, id) => {
-        const tableBody = viewport.querySelector(`#${id} table tbody`);
+          data.date = date;
 
-        let minusIndex = 1;
+          for (let i = 1; i < tableBody.childNodes.length; i++) {
+            const tr = tableBody.childNodes[i];
 
-        while (tableBody.childNodes.length - minusIndex > 1) {
-          const tr =
-            tableBody.childNodes[tableBody.childNodes.length - minusIndex];
-          // date = tr.childNodes[1].innerText;
-          let index = 2;
-          for (index = 2; index < tr.childNodes.length; index++) {
-            const td = tr.childNodes[index];
-            const text = decode(td.innerText);
-            if (text === "") break;
-            const parsedText = JSON.parse(text);
-            data[value.name] = { ...data[value.name], ...parsedText };
+            for (let j = 1; j < tr.childNodes.length; j++) {
+              const td = tr.childNodes[j];
+              const text = decode(td.innerText);
+              if (text === "") continue;
+              const parsedText = JSON.parse(text);
+              data.data = { ...data.data, ...parsedText };
+            }
           }
-          if (index > 2) break;
+          console.log("Fetch took " + (new Date() - start) / 1000 + "s");
+          console.log(data);
 
-          minusIndex++;
-        }
-      });
+          setStockData((s) => {
+            return { ...s, [exchange]: data };
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+          setStockData((s) => {
+            return {
+              ...s,
+              [exchange]: {
+                error: "Something went wrong. Please try again later",
+              },
+            };
+          }) 
+        });
 
-      setStockData(data);
-      message.success({
-        content: "Finish loading",
-        key: "loading",
-        duration: 0.5,
-      });
-    } catch (err) {
-      console.error(err);
-      message.error("Something went wrong. Please try again later");
+      // skeleton off
     }
-  };
+  }, []);
 
   return (
     <div style={{ padding: 10 }}>
-      <HashRouter basename="/stocks">
+      <HashRouter>
         <Header></Header>
         <div style={{ width: "95%", margin: "auto" }}>
           <Switch>
             <Route exact path="/:country/:symbol" component={Single} />
             <Route exact path="/">
-              <Main stockData={stockData} />
+              <Main
+                stockData={stockData}
+                setStockData={setStockData}
+                activeTab={mainLastActiveTab}
+                setActiveTab={setMainLastActiveTab}
+              />
             </Route>
           </Switch>
         </div>
@@ -166,7 +181,7 @@ const Header = () => {
             lg={18}
             xl={19}
             xxl={20}
-            style={{ textAlign: "right" }}
+            style={{ textAlign: "right", paddingTop: 6 }}
           >
             <Select
               showSearch
@@ -177,7 +192,7 @@ const Header = () => {
               onSelect={onSelect}
               notFoundContent={null}
               placeholder="Search..."
-              style={{ width: "250px", textAlign: "left" }}
+              style={{ maxWidth: "250px", width: "100%", textAlign: "left" }}
             >
               {options.map((option) => (
                 <Option
@@ -186,7 +201,9 @@ const Header = () => {
                   symbol={option.symbol}
                   fullName={option.fullName}
                 >
-                  <span>{option.symbol}</span>
+                  <span>
+                    {option.symbol} ({option.country})
+                  </span>
                   <br />
                   <small>{option.fullName}</small>
                 </Option>
