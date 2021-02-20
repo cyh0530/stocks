@@ -219,8 +219,12 @@ const columns = [
       // if (fullName.length > 25) {
       //   fullName = fullName.substring(0, 25) + "...";
       // }
-      let differencePoint = allData[0].current.difference.points;
-      let differencePct = allData[0].current.difference.percentage + "%";
+      let differencePoint = 0,
+        differencePct = 0;
+      if (allData.length > 0 && allData[0].current.difference) {
+        differencePoint = allData[0].current.difference.points;
+        differencePct = allData[0].current.difference.percentage + "%";
+      }
 
       if (differencePoint > 0) {
         style.color = "red";
