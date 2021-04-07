@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Select, Row, Col, message } from "antd";
 import { HashRouter, Switch, Route, Link } from "react-router-dom";
 import axios from "axios";
@@ -94,7 +94,7 @@ function App() {
   return (
     <div style={{ padding: 10 }}>
       <HashRouter>
-        <Header></Header>
+        <Header />
         <div style={{ width: "95%", margin: "auto" }}>
           <Switch>
             <Route exact path="/:country/:symbol" component={Single} />
@@ -116,6 +116,8 @@ function App() {
 const Header = () => {
   const { Option } = Select;
   const [options, setOptions] = useState([]);
+  const selectRef = useRef();
+
   useEffect(() => {
     fetchStockList();
   }, []);
@@ -142,6 +144,7 @@ const Header = () => {
 
   const onSelect = (value) => {
     window.location.href = "/stocks/#/" + value;
+    selectRef.current.blur();
   };
 
   const filterOption = (input, option) => {
@@ -184,6 +187,7 @@ const Header = () => {
             style={{ textAlign: "right", paddingTop: 6 }}
           >
             <Select
+              ref={selectRef}
               showSearch
               defaultActiveFirstOption={false}
               showArrow={false}
