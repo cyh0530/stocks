@@ -4,11 +4,12 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { singleStockColumns } from "../utils/Constants";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { appScriptURL } from "../utils/Constants";
 
 export default function Single() {
   let { country, symbol } = useParams();
+  const location = useLocation();
   const [header, setHeader] = useState(<></>);
   const [dataSource, setDataSource] = useState({});
   const [error, setError] = useState({});
@@ -21,10 +22,11 @@ export default function Single() {
     try {
       setFinishFetching(false);
       setError({});
+      let mode = location.pathname.includes("v0") ? "single-old" : "single";
       const data = await axios({
         url: appScriptURL,
         params: {
-          mode: "single",
+          mode: mode,
           country: country.toUpperCase(),
           symbol: symbol.toUpperCase(),
         },

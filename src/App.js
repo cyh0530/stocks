@@ -97,8 +97,8 @@ function App() {
         <Header />
         <div style={{ width: "95%", margin: "auto" }}>
           <Switch>
-            <Route exact path="/:country/:symbol" component={Single} />
-            <Route exact path="/">
+            <Route exact path={["/v0/:country/:symbol", "/:country/:symbol"]} component={Single} />
+            <Route exact path={["/", "/v0"]}>
               <Main
                 stockData={stockData}
                 setStockData={setStockData}

@@ -1,5 +1,5 @@
 export const summaryLink = {
-  TW:
+  TPE:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTICqnaz9FpFBdfQtoM4yhfWVudIxvBgp5s6EolSVN-RRq2wD4dPz3yWIH-5D29QBx-krn71isP4Lmn/pubhtml",
   NYSE:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFJ5ulGKfVIGPvKG_QL5Tr2CkV4Qjjm4jQb5LmIwQ-obbUao7SYDCBlO5qtF2VuznRuWY1pejrTB8j/pubhtml",
@@ -10,7 +10,7 @@ export const summaryLink = {
 };
 
 export const appScriptURL =
-  "https://script.google.com/a/uw.edu/macros/s/AKfycbzdeg0uAW8TFykGSnDPjMxYhAayyAfcQEnuByZm7ykEKiXJbdk/exec";
+  "https://script.google.com/macros/s/AKfycbwsfAHpjGv-NdN14ZE2xQj_wMLBq4z1opf9DQ8g8tQh_Z-iZNkKC1IUK2SqKK4nVNdE/exec";
 
 export const MODE = {
   color: [
@@ -86,25 +86,41 @@ export const singleStockColumns = [
         currentSpeedPct = 0;
       } else {
         currentSpeed =
-          Math.round((currentPriceDiff / ((currentDateDiff / 7) * 5)) * 100) /
-          100;
+          Math.round((currentPriceDiff / (currentDateDiff / 7)) * 100) / 100;
         currentSpeedPct =
           Math.round((currentSpeed / currentDateDiff) * 10000) / 100;
       }
 
-      const expectPriceDiff = row.predict.price - row.middle.price;
+      /*
+      const pctToDouble = (pct) => {
+        if (typeof pct === "number") return pct;
+        try {
+          return parseFloat(pct.substring(0, pct.length - 1));
+        } catch (e) {
+          console.error(row);
+          return 0;
+        }
+      };
+      */
+
+      const expectPriceDiff = row.predict.price - row.current.price;
       const expectDateDiffMillis = predictDate - middleDate;
       const expectDateDiff = expectDateDiffMillis / (1000 * 60 * 60 * 24);
+
       let expectSpeed, expectSpeedPct;
       if (expectDateDiff <= 0) {
         expectSpeed = 0;
         expectSpeedPct = 0;
       } else {
         expectSpeed =
-          Math.round((expectPriceDiff / ((expectDateDiff / 7) * 5)) * 100) /
-          100;
+          Math.round((expectPriceDiff / (expectDateDiff / 7)) * 100) / 100;
         expectSpeedPct =
           Math.round((expectSpeed / expectDateDiff) * 10000) / 100;
+      }
+      if (row.index === 3675 && row.predict.date === "3/1/2022") {
+        console.log(expectPriceDiff);
+        console.log(expectDateDiff);
+        console.log(expectSpeed);
       }
 
       let style = { textAlign: "right" };
@@ -185,7 +201,7 @@ export const singleStockColumns = [
 
       return aSpeedPct - bSpeedPct;
     },
-  },
+  } /*
   {
     title: "獲利空間",
     dataIndex: "gain",
@@ -221,6 +237,48 @@ export const singleStockColumns = [
         return 1;
       }
       return a.gain.price - b.gain.price;
+    },
+  },*/,
+  {
+    title: "目標價",
+    dataIndex: "predict",
+    key: "predict",
+    align: "right",
+    width: 100,
+    defaultSortOrder: "ascend",
+    render: (text, row, index) => {
+      const currentDate = new Date(row.current.date);
+      const predictDate = new Date(row.predict.date);
+      let style = {};
+      if (predictDate < currentDate) {
+        style.color = "gray";
+      }
+
+      return (
+        <p style={style}>
+          <span>{row.predict.price}</span>
+          <br />
+          <span>
+            (+{row.gain.price}, {row.gain.percentage})
+          </span>
+          <br />
+          <small>{row.predict.date}</small>
+        </p>
+      );
+    },
+    sorter: (a, b) => {
+      const currentDate = new Date(a.current.date);
+      const aPredictDate = new Date(a.predict.date);
+      const bPredictDate = new Date(b.predict.date);
+
+      if (aPredictDate <= currentDate && bPredictDate <= currentDate) {
+        return aPredictDate - bPredictDate;
+      } else if (aPredictDate <= currentDate) {
+        return -1;
+      } else if (bPredictDate <= currentDate) {
+        return 1;
+      }
+      return a.predict.price - b.predict.price;
     },
   },
   {
@@ -317,31 +375,6 @@ export const singleStockColumns = [
   //     );
   //   },
   // },
-  {
-    title: "目標價",
-    dataIndex: "predict",
-    key: "predict",
-    align: "right",
-    width: 100,
-    defaultSortOrder: "ascend",
-    render: (text, row, index) => {
-      const currentDate = new Date(row.current.date);
-      const predictDate = new Date(row.predict.date);
-      let style = {};
-      if (predictDate < currentDate) {
-        style.color = "gray";
-      }
-
-      return (
-        <p style={style}>
-          <span>{row.predict.price}</span>
-          <br />
-          <small>{row.predict.date}</small>
-        </p>
-      );
-    },
-    sorter: (a, b) => a.predict.price - b.predict.price,
-  },
 ];
 
 export const tabName = {

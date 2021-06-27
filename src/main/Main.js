@@ -4,7 +4,12 @@ import { Link } from "react-router-dom";
 import { singleStockColumns, tabName } from "../utils/Constants";
 
 export default function Main({ stockData, activeTab, setActiveTab }) {
-  const [tabPanes, setTabPanes] = useState([]);
+  const [tabPanes, setTabPanes] = useState([
+    { key: "TPE", exchanges: "TPE", notFetched: true },
+    { key: "NYSE", exchanges: "NYSE", notFetched: true },
+    { key: "NASDAQ", exchanges: "NASDAQ", notFetched: true },
+    { key: "HKG", exchanges: "HKG", notFetched: true },
+  ]);
   const { TabPane } = Tabs;
   document.title = "Stocks";
   useEffect(() => {
@@ -15,7 +20,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
       HKG: "HK",
     };
     // parse raw data to website required format
-    const tabs = [];
+    let tabs = tabPanes;
     for (let exchanges in stockData) {
       const subTabs = [];
 
@@ -55,12 +60,12 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
           dataSource: categories[category],
         });
       }
-
-      tabs.push({
+      const tabIndex = tabs.findIndex((t) => t.exchanges === exchanges);
+      tabs[tabIndex] = {
         exchanges,
         date,
         subTabs,
-      });
+      };
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -104,47 +109,51 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
     setActiveTab({ ...activeTab, subTab: key });
   };
   return (
-    <Tabs defaultActiveKey={activeTab.exchange} onChange={changeTab}>
+    <Tabs defaultActiveKey={activeTab.exchanges} onChange={changeTab}>
       {tabPanes.map((tab) => {
+        let content = <Skeleton active />;
         if (tab.notFetched) {
-          return <Skeleton active />;
+          content = <Skeleton active />;
         } else if (tab.error) {
-          return <h2>{tab.error}</h2>;
+          content = <h2>{tab.error}</h2>;
         } else {
-          return (
-            <TabPane tab={tab.exchanges} key={tab.exchanges}>
-              <Tabs defaultActiveKey={activeTab.subTab} onChange={changeSubTab}>
-                {tab.subTabs.map((subTab, index2) => (
-                  <TabPane tab={subTab.tabName} key={index2}>
-                    <div style={{ margin: "auto" }}>
-                      <h4>最後更新: {tab.date}</h4>
-                      <h5>點擊各行以檢視詳細資料</h5>
-                      <Table
-                        key={index2}
-                        size="small"
-                        columns={columns}
-                        bordered
-                        dataSource={subTab.dataSource}
-                        pagination={{
-                          defaultPageSize: 20,
-                          hideOnSinglePage: true,
-                        }}
-                        expandable={{
-                          expandedRowRender,
-                          expandRowByClick: true,
-                          indentSize: 0,
-                          expandIconColumnIndex: -1,
-                        }}
-                        scroll={{ x: 600 }}
-                        sortDirections={["descend", "ascend"]}
-                      />
-                    </div>
-                  </TabPane>
-                ))}
-              </Tabs>
-            </TabPane>
+          content = (
+            <Tabs defaultActiveKey={activeTab.subTab} onChange={changeSubTab}>
+              {tab.subTabs.map((subTab, index2) => (
+                <TabPane tab={subTab.tabName} key={index2}>
+                  <div style={{ margin: "auto", maxWidth: "1200px" }}>
+                    <h4>最後更新: {tab.date}</h4>
+                    <h5>點擊各行以檢視詳細資料</h5>
+                    <Table
+                      key={index2}
+                      size="small"
+                      columns={columns}
+                      bordered
+                      dataSource={subTab.dataSource}
+                      pagination={{
+                        defaultPageSize: 20,
+                        hideOnSinglePage: true,
+                      }}
+                      expandable={{
+                        expandedRowRender,
+                        expandRowByClick: true,
+                        indentSize: 0,
+                        expandIconColumnIndex: -1,
+                      }}
+                      scroll={{ x: 600 }}
+                      sortDirections={["descend", "ascend"]}
+                    />
+                  </div>
+                </TabPane>
+              ))}
+            </Tabs>
           );
         }
+        return (
+          <TabPane tab={tab.exchanges} key={tab.exchanges}>
+            {content}
+          </TabPane>
+        );
       })}
 
       {/* <TabPane tab="Favorite" key="1">
@@ -305,8 +314,7 @@ const columns = [
           currentSpeedPct = 0;
         } else {
           currentSpeed =
-            Math.round((currentPriceDiff / ((currentDateDiff / 7) * 5)) * 100) /
-            100;
+            Math.round((currentPriceDiff / (currentDateDiff / 7)) * 100) / 100;
           currentSpeedPct =
             Math.round((currentSpeed / currentDateDiff) * 10000) / 100;
         }
@@ -320,8 +328,7 @@ const columns = [
           expectSpeedPct = 0;
         } else {
           expectSpeed =
-            Math.round((expectPriceDiff / ((expectDateDiff / 7) * 5)) * 100) /
-            100;
+            Math.round((expectPriceDiff / (expectDateDiff / 7)) * 100) / 100;
           expectSpeedPct =
             Math.round((expectSpeed / expectDateDiff) * 10000) / 100;
         }
@@ -346,7 +353,7 @@ const columns = [
         <span>
           <span>{maxSpeedPct}%</span>
           <br />
-          <small>{maxSpeed}</small>
+          <small>+{maxSpeed} / wk</small>
         </span>
       );
     },
