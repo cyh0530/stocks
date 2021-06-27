@@ -216,6 +216,15 @@ const oldStockColumns = [
     align: "right",
     fixed: "left",
     width: 100,
+    render: (text, row, index) => {
+      let style = {};
+      if (row.success) {
+        style.color = "red";
+      } else {
+        style.color = "green";
+      }
+      return <span style={style}>{text}</span>;
+    },
   },
   {
     title: "獲利",
@@ -224,8 +233,8 @@ const oldStockColumns = [
     align: "right",
     width: 100,
     render: (text, row, index) => {
-      let style = { textAlign: "right" };
-      if (row.success) {
+      let style = {};
+      if (row.gain.price > 0) {
         style.color = "red";
       } else {
         style.color = "green";
@@ -239,7 +248,7 @@ const oldStockColumns = [
           <br />
           <small>
             {row.gain.price > 0 ? "+" : ""}
-            {row.gain.percentage}
+            {(row.gain.percentage * 100).toFixed(2)}%
           </small>
         </span>
       );
@@ -283,6 +292,34 @@ const oldStockColumns = [
     },
   },
   {
+    title: "目標價",
+    dataIndex: "predict",
+    key: "predict",
+    align: "right",
+    width: 100,
+    defaultSortOrder: "descend",
+    render: (text, row, index) => {
+      const currentDate = new Date(row.current.date);
+      const predictDate = new Date(row.predict.date);
+      let style = {};
+      if (predictDate < currentDate) {
+        style.color = "red";
+      }
+      return (
+        <span style={{ textAlign: "right" }}>
+          <span>{row.predict.price}</span>
+          <br />
+          <small style={style}>{row.predict.date}</small>
+        </span>
+      );
+    },
+    sorter: (a, b) => {
+      const dateA = new Date(a.predict.date);
+      const dateB = new Date(b.predict.date);
+      return dateA - dateB;
+    },
+  },
+  {
     title: "起漲點",
     dataIndex: "start",
     key: "start",
@@ -318,30 +355,6 @@ const oldStockColumns = [
         </span>
       );
     },
-  },
-  {
-    title: "目標價",
-    dataIndex: "predict",
-    key: "predict",
-    align: "right",
-    width: 100,
-    defaultSortOrder: "descend",
-    render: (text, row, index) => {
-      const currentDate = new Date(row.current.date);
-      const predictDate = new Date(row.predict.date);
-      let style = {};
-      if (predictDate < currentDate) {
-        style.color = "red";
-      }
-      return (
-        <span style={{ textAlign: "right" }}>
-          <span>{row.predict.price}</span>
-          <br />
-          <small style={style}>{row.predict.date}</small>
-        </span>
-      );
-    },
-    sorter: (a, b) => a.predict.price - b.predict.price,
   },
 ];
 
