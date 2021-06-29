@@ -34,7 +34,6 @@ export default function Single() {
         return res.data;
       });
 
-      console.log(data);
       if (data.error) {
         console.error(data.error);
 
@@ -49,7 +48,20 @@ export default function Single() {
       }
 
       document.title = `${symbol} - ${data.profile.fullName} | Stocks`;
-      setDataSource({ ...data.data });
+
+      let oldDataWithKey = [];
+      let currentDataWithKey = [];
+      let index = 0;
+
+      for (const row of data.data.old) {
+        oldDataWithKey.push({ ...row, key: index++ });
+      }
+
+      index = 0;
+      for (const row of data.data.current) {
+        currentDataWithKey.push({ ...row, key: index++ });
+      }
+      setDataSource({ old: oldDataWithKey, current: currentDataWithKey });
       const profile = data.profile;
 
       // eslint-disable-next-line no-unused-vars
@@ -225,7 +237,11 @@ const oldStockColumns = [
       } else {
         style.color = "green";
       }
-      return <span style={style}>{text}</span>;
+      return (
+        <span style={style} key={index}>
+          {text}
+        </span>
+      );
     },
   },
   {
@@ -242,7 +258,7 @@ const oldStockColumns = [
         style.color = "green";
       }
       return (
-        <span style={style}>
+        <span style={style} key={index}>
           <span>
             {row.gain.price > 0 ? "+" : ""}
             {row.gain.price}
@@ -264,7 +280,7 @@ const oldStockColumns = [
     width: 100,
     render: (text, row, index) => {
       return (
-        <span style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }} key={index}>
           <span>{row.buy.price}</span>
           <br />
           <small>{row.buy.date}</small>
@@ -285,7 +301,7 @@ const oldStockColumns = [
     width: 100,
     render: (text, row, index) => {
       return (
-        <span style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }} key={index}>
           <span>{row.sell.price}</span>
           <br />
           <small>{row.sell.date}</small>
@@ -308,7 +324,7 @@ const oldStockColumns = [
         style.color = "red";
       }
       return (
-        <span style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }} key={index}>
           <span>{row.predict.price}</span>
           <br />
           <small style={style}>{row.predict.date}</small>
@@ -329,7 +345,7 @@ const oldStockColumns = [
     width: 100,
     render: (text, row, index) => {
       return (
-        <span style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }} key={index}>
           <span>{row.start.price}</span>
           <br />
           <small>{row.start.date}</small>
@@ -345,7 +361,7 @@ const oldStockColumns = [
     width: 120,
     render: (text, row, index) => {
       return (
-        <span style={{ textAlign: "right" }}>
+        <span style={{ textAlign: "right" }} key={index}>
           <span>{row.middle.price}</span>
           <br />
           <small>

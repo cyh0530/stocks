@@ -20,7 +20,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
       HKG: "HK",
     };
     // parse raw data to website required format
-    let tabs = tabPanes;
+    let tabs = tabPanes.slice(0, tabPanes.length);
     for (let exchanges in stockData) {
       const subTabs = [];
 
@@ -110,14 +110,13 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
   };
   return (
     <Tabs defaultActiveKey={activeTab.exchanges} onChange={changeTab}>
-      {tabPanes.map((tab) => {
-        let content = <Skeleton active />;
-        if (tab.notFetched) {
-          content = <Skeleton active />;
-        } else if (tab.error) {
-          content = <h2>{tab.error}</h2>;
-        } else {
-          content = (
+      {tabPanes.map((tab) => (
+        <TabPane tab={tab.exchanges} key={tab.exchanges}>
+          {tab.notFetched ? (
+            <Skeleton active />
+          ) : tab.error ? (
+            <h2>{tab.error}</h2>
+          ) : (
             <Tabs defaultActiveKey={activeTab.subTab} onChange={changeSubTab}>
               {tab.subTabs.map((subTab, index2) => (
                 <TabPane tab={subTab.tabName} key={index2}>
@@ -147,14 +146,9 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
                 </TabPane>
               ))}
             </Tabs>
-          );
-        }
-        return (
-          <TabPane tab={tab.exchanges} key={tab.exchanges}>
-            {content}
-          </TabPane>
-        );
-      })}
+          )}
+        </TabPane>
+      ))}
 
       {/* <TabPane tab="Favorite" key="1">
           <Table

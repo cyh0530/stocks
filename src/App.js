@@ -10,7 +10,7 @@ import { appScriptURL, summaryLink } from "./utils/Constants";
 
 function App() {
   let stockDataInitial = {};
-  for (let exchange in summaryLink) {
+  for (let exchange in summaryLink['v0']) {
     stockDataInitial[exchange] = { notFetched: true };
   }
   const [stockData, setStockData] = useState(stockDataInitial);
@@ -93,7 +93,7 @@ function App() {
 
       // skeleton off
     }
-  }, [window.location.pathname]);
+  }, []);
 
   return (
     <div style={{ padding: 10 }}>
