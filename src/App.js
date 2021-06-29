@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Select, Row, Col, message } from "antd";
-import { HashRouter, Switch, Route, Link } from "react-router-dom";
+import { HashRouter, Switch, Route, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { parse } from "node-html-parser";
 import { decode } from "html-entities";
@@ -14,6 +14,7 @@ function App() {
     stockDataInitial[exchange] = { notFetched: true };
   }
   const [stockData, setStockData] = useState(stockDataInitial);
+  const location = useLocation();
 
   // eslint-disable-next-line no-unused-vars
   const stockDataTemplate = {
@@ -29,8 +30,11 @@ function App() {
   });
 
   useEffect(() => {
+    let summary = location.pathname.includes("v0")
+      ? summaryLink["v0"]
+      : summaryLink["latest"];
     // get summary exchange web url
-    for (let exchange in summaryLink) {
+    for (let exchange in summary) {
       // skeleton on
       // const data = fetchData(summaryLink[exchange]);
 
@@ -84,7 +88,7 @@ function App() {
                 error: "Something went wrong. Please try again later",
               },
             };
-          }) 
+          });
         });
 
       // skeleton off
@@ -97,7 +101,11 @@ function App() {
         <Header />
         <div style={{ width: "95%", margin: "auto" }}>
           <Switch>
-            <Route exact path={["/v0/:country/:symbol", "/:country/:symbol"]} component={Single} />
+            <Route
+              exact
+              path={["/v0/:country/:symbol", "/:country/:symbol"]}
+              component={Single}
+            />
             <Route exact path={["/", "/v0"]}>
               <Main
                 stockData={stockData}

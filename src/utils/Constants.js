@@ -1,12 +1,18 @@
 export const summaryLink = {
-  TPE:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTICqnaz9FpFBdfQtoM4yhfWVudIxvBgp5s6EolSVN-RRq2wD4dPz3yWIH-5D29QBx-krn71isP4Lmn/pubhtml",
-  NYSE:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFJ5ulGKfVIGPvKG_QL5Tr2CkV4Qjjm4jQb5LmIwQ-obbUao7SYDCBlO5qtF2VuznRuWY1pejrTB8j/pubhtml",
-  NASDAQ:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzS1M2eoYGYH-g7Y_u1SCvcwTiAo4CxCjVwkGQzQpz7aQEY7aK3Wow47tpirw6mgKA384CKXU_QlWS/pubhtml",
-  HKG:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLf9h7gj6CAlqRPAdwuWNvLBNmDzH1SJVexVAoZi_QRkaTDXIaUOK1NUKH-kQIAgl8twlvZjri_hL3/pubhtml",
+  v0: {
+    TPE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTICqnaz9FpFBdfQtoM4yhfWVudIxvBgp5s6EolSVN-RRq2wD4dPz3yWIH-5D29QBx-krn71isP4Lmn/pubhtml",
+    NYSE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFJ5ulGKfVIGPvKG_QL5Tr2CkV4Qjjm4jQb5LmIwQ-obbUao7SYDCBlO5qtF2VuznRuWY1pejrTB8j/pubhtml",
+    NASDAQ:
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzS1M2eoYGYH-g7Y_u1SCvcwTiAo4CxCjVwkGQzQpz7aQEY7aK3Wow47tpirw6mgKA384CKXU_QlWS/pubhtml",
+    HKG: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLf9h7gj6CAlqRPAdwuWNvLBNmDzH1SJVexVAoZi_QRkaTDXIaUOK1NUKH-kQIAgl8twlvZjri_hL3/pubhtml",
+  },
+  latest: {
+    TPE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzxFkoyT1UVa9rNWmyvxSi2Ioy0fEcfx8CD3vwajaVJwLsvCznU_b9BcnVhJi_A1H2Dnt-RiRGmnmK/pubhtml",
+    NYSE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTi87QTV9HZdcdNA6kmSSOwEFBx_uzX130j5pj8Efl6Yio68w3eP-sXEToK2q_LIeRc26nRYBxAFyQi/pubhtml",
+    NASDAQ:
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRudTTgDVo7o4RwuuzE0SyCSAr9ujsYrNZOfBvfLFWOwlwOjybvfDOHawX_MEqij1DgntvPp6Quva8F/pubhtml",
+    HKG: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGvjUjUAXd6-QcSqyntcDKVnzW5Q7wohWSNfv_vVc3WvC-OYVGAg3xa_ywiuF-a0dmZy6iqwo0Pt5l/pubhtml",
+  },
 };
 
 export const appScriptURL =

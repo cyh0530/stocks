@@ -3,6 +3,7 @@ src/utils/data/data.py
 src/utils/data/Data.ipynb
 src/utils/data/record/*/
 **/.ipynb_checkpoints
+**/__pycache__
 
 # dependencies
 /node_modules
