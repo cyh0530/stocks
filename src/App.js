@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Select, Row, Col, message } from "antd";
-import { HashRouter, Switch, Route, Link, useLocation } from "react-router-dom";
+import { HashRouter, Switch, Route, Link } from "react-router-dom";
 import axios from "axios";
 import { parse } from "node-html-parser";
 import { decode } from "html-entities";
@@ -14,7 +14,6 @@ function App() {
     stockDataInitial[exchange] = { notFetched: true };
   }
   const [stockData, setStockData] = useState(stockDataInitial);
-  const location = useLocation();
 
   // eslint-disable-next-line no-unused-vars
   const stockDataTemplate = {
@@ -30,9 +29,10 @@ function App() {
   });
 
   useEffect(() => {
-    let summary = location.pathname.includes("v0")
+    let summary = window.location.pathname.includes("v0")
       ? summaryLink["v0"]
       : summaryLink["latest"];
+
     // get summary exchange web url
     for (let exchange in summary) {
       // skeleton on
@@ -40,7 +40,7 @@ function App() {
 
       const start = new Date();
       axios
-        .get(summaryLink[exchange])
+        .get(summary[exchange])
         .then((res) => {
           return res.data;
         })
@@ -93,7 +93,7 @@ function App() {
 
       // skeleton off
     }
-  }, []);
+  }, [window.location.pathname]);
 
   return (
     <div style={{ padding: 10 }}>
