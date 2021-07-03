@@ -299,6 +299,7 @@ const oldStockColumns = [
     key: "sell",
     align: "right",
     width: 100,
+    defaultSortOrder: "descend",
     render: (text, row, index) => {
       return (
         <span style={{ textAlign: "right" }} key={index}>
@@ -308,6 +309,11 @@ const oldStockColumns = [
         </span>
       );
     },
+    sorter: (a, b) => {
+      const dateA = new Date(a.predict.date);
+      const dateB = new Date(b.predict.date);
+      return dateA - dateB;
+    },
   },
   {
     title: "目標價",
@@ -315,7 +321,6 @@ const oldStockColumns = [
     key: "predict",
     align: "right",
     width: 100,
-    defaultSortOrder: "descend",
     render: (text, row, index) => {
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
@@ -330,11 +335,6 @@ const oldStockColumns = [
           <small style={style}>{row.predict.date}</small>
         </span>
       );
-    },
-    sorter: (a, b) => {
-      const dateA = new Date(a.predict.date);
-      const dateB = new Date(b.predict.date);
-      return dateA - dateB;
     },
   },
   {
