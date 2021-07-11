@@ -64,7 +64,7 @@ export default function Single() {
       setDataSource({ old: oldDataWithKey, current: currentDataWithKey });
       const profile = data.profile;
 
-      // eslint-disable-next-line no-unused-vars
+      /*
       const profileTemplate = {
         profile: {
           fullName: "",
@@ -87,7 +87,8 @@ export default function Single() {
           current: [],
         },
       };
-
+      */
+     
       let price;
 
       if (profile.difference.points < 0) {
@@ -165,7 +166,6 @@ export default function Single() {
   };
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country, symbol]);
 
   const onFavoriteChange = (value) => {
@@ -376,7 +376,7 @@ const oldStockColumns = [
   },
 ];
 
-// eslint-disable-next-line no-unused-vars
+/*
 const templateOldStockData = {
   signal: "change hand",
   action: "buy",
@@ -430,3 +430,4 @@ const templateOldStockData = {
   success: true / false,
   index: 3582,
 };
+*/

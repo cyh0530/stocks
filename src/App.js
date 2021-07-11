@@ -10,18 +10,19 @@ import { appScriptURL, summaryLink } from "./utils/Constants";
 
 function App() {
   let stockDataInitial = {};
-  for (let exchange in summaryLink['v0']) {
+  for (let exchange in summaryLink["v0"]) {
     stockDataInitial[exchange] = { notFetched: true };
   }
   const [stockData, setStockData] = useState(stockDataInitial);
 
-  // eslint-disable-next-line no-unused-vars
+  /*
   const stockDataTemplate = {
     exchange: {
       date: "2021/01/01",
       data: {},
     },
   };
+  */
 
   const [mainLastActiveTab, setMainLastActiveTab] = useState({
     exchange: "TW",
@@ -145,11 +146,12 @@ const Header = () => {
       message.error("Search Function will not work");
     }
   };
-  // eslint-disable-next-line no-unused-vars
+
+  /*
   const template = [
     { exchange: "NASDAQ", symbol: "AAPL", fullName: "Apple Inc." },
   ];
-
+  */
   const onSelect = (value) => {
     window.location.href = "/stocks/#/" + value;
     selectRef.current.blur();

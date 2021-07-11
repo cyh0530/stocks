@@ -19,6 +19,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
       NYSE: "US",
       HKG: "HK",
     };
+    
     // parse raw data to website required format
     let tabs = tabPanes.slice(0, tabPanes.length);
     for (let exchanges in stockData) {
@@ -68,7 +69,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
       };
     }
 
-    // eslint-disable-next-line no-unused-vars
+    /*
     const templateTab = [
       {
         exchanges: "TPE",
@@ -97,7 +98,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
         ],
       },
     ];
-
+    */
     setTabPanes(tabs);
   }, [stockData]);
 
