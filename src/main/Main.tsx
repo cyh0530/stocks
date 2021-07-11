@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, Tabs, Skeleton } from "antd";
+import { ColumnsType } from "antd/es/table";
 import { Link } from "react-router-dom";
-import { singleStockColumns, tabName } from "../utils/Constants";
+import {
+  singleStockColumns,
+  tabName,
+  ITableMain,
+  ITableSingle,
+  timeDiff,
+} from "../utils/Constants";
 
 export default function Main({ stockData, activeTab, setActiveTab }) {
-  const [tabPanes, setTabPanes] = useState([
+  const [tabPanes, setTabPanes] = useState<any[]>([
     { key: "TPE", exchanges: "TPE", notFetched: true },
     { key: "NYSE", exchanges: "NYSE", notFetched: true },
     { key: "NASDAQ", exchanges: "NASDAQ", notFetched: true },
@@ -19,7 +26,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
       NYSE: "US",
       HKG: "HK",
     };
-    
+
     // parse raw data to website required format
     let tabs = tabPanes.slice(0, tabPanes.length);
     for (let exchanges in stockData) {
@@ -124,7 +131,7 @@ export default function Main({ stockData, activeTab, setActiveTab }) {
                   <div style={{ margin: "auto", maxWidth: "1200px" }}>
                     <h4>最後更新: {tab.date}</h4>
                     <h5>點擊各行以檢視詳細資料</h5>
-                    <Table
+                    <Table<ITableMain>
                       key={index2}
                       size="small"
                       columns={columns}
@@ -193,7 +200,7 @@ const expandedRowRender = (record) => {
 
   return (
     <div style={{ margin: "10px 0px" }}>
-      <Table
+      <Table<ITableSingle>
         size="small"
         columns={singleStockColumns}
         dataSource={dataSource}
@@ -206,7 +213,7 @@ const expandedRowRender = (record) => {
   );
 };
 
-const columns = [
+const columns: ColumnsType<ITableMain> = [
   {
     title: "股票",
     dataIndex: "stock",
@@ -217,14 +224,14 @@ const columns = [
     render: (text, row, index) => {
       const allData = row.subDataSource;
 
-      let style = {};
+      let style: any = {};
 
       let fullName = row.fullName;
       // if (fullName.length > 25) {
       //   fullName = fullName.substring(0, 25) + "...";
       // }
-      let differencePoint = 0,
-        differencePct = 0;
+      let differencePoint: any = 0,
+        differencePct = "0%";
       if (allData.length > 0 && allData[0].current.difference) {
         differencePoint = allData[0].current.difference.points;
         differencePct = allData[0].current.difference.percentage + "%";
@@ -301,7 +308,7 @@ const columns = [
         const predictDate = new Date(data.predict.date);
 
         const currentPriceDiff = data.current.price - data.middle.price;
-        const currentDateDiffMillis = currentDate - middleDate;
+        const currentDateDiffMillis = timeDiff(currentDate, middleDate);
         const currentDateDiff = currentDateDiffMillis / (1000 * 60 * 60 * 24);
         let currentSpeed, currentSpeedPct;
         if (currentDateDiff <= 0) {
@@ -315,7 +322,7 @@ const columns = [
         }
 
         const expectPriceDiff = data.predict.price - data.middle.price;
-        const expectDateDiffMillis = predictDate - middleDate;
+        const expectDateDiffMillis = timeDiff(predictDate, middleDate);
         const expectDateDiff = expectDateDiffMillis / (1000 * 60 * 60 * 24);
         let expectSpeed, expectSpeedPct;
         if (expectDateDiff <= 0) {
@@ -359,8 +366,10 @@ const columns = [
       let aMaxSpeedPct = 0;
       for (let data of aAllData) {
         const priceDiff = data.predict.price - data.current.price;
-        const dateDiffMillis =
-          new Date(data.predict.date) - new Date(data.current.date);
+        const dateDiffMillis = timeDiff(
+          new Date(data.predict.date),
+          new Date(data.current.date)
+        );
         if (dateDiffMillis <= 0) continue;
         const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
         const speed = priceDiff / ((dateDiff / 7) * 5);
@@ -375,8 +384,10 @@ const columns = [
       let bMaxSpeedPct = 0;
       for (let data of bAllData) {
         const priceDiff = data.predict.price - data.current.price;
-        const dateDiffMillis =
-          new Date(data.predict.date) - new Date(data.current.date);
+        const dateDiffMillis = timeDiff(
+          new Date(data.predict.date),
+          new Date(data.current.date)
+        );
         if (dateDiffMillis <= 0) continue;
 
         const dateDiff = dateDiffMillis / (1000 * 60 * 60 * 24);
@@ -454,8 +465,8 @@ const columns = [
       for (let data of bAllData) {
         const dataPredictDate = new Date(data.predict.date);
         if (dataPredictDate <= currentDate) continue;
-        bMin = Math.min(pctToDouble(data.gain.percentage, bMin));
-        bMax = Math.max(pctToDouble(data.gain.percentage, bMax));
+        bMin = Math.min(pctToDouble(data.gain.percentage), bMin);
+        bMax = Math.max(pctToDouble(data.gain.percentage), bMax);
       }
 
       return aMax - bMax;

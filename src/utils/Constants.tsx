@@ -1,3 +1,5 @@
+import { ColumnsType } from "antd/es/table";
+
 export const summaryLink = {
   v0: {
     TPE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTICqnaz9FpFBdfQtoM4yhfWVudIxvBgp5s6EolSVN-RRq2wD4dPz3yWIH-5D29QBx-krn71isP4Lmn/pubhtml",
@@ -28,7 +30,58 @@ export const MODE = {
   ],
 };
 
-export const singleStockColumns = [
+export const timeDiff = (a: Date, b: Date): number => a.getTime() - b.getTime();
+
+export interface ITableMain {
+  key: string;
+  exchanges: string;
+  country: string;
+  stock: string;
+  fullName: string;
+  subDataSource: ITableSingle[];
+}
+
+export interface ITableSingle {
+  key: string;
+  signal: string;
+  action: string;
+  gain: {
+    price: number;
+    percentage: number | string;
+    speed: { speed: number; percentage: number };
+  };
+  start: { date: string; price: number; index: number };
+  middle: {
+    date: string;
+    price: number;
+    index: number;
+    difference: { points: number | string; percentage: number | string };
+  };
+  current: {
+    date: string;
+    price: number;
+    index: number;
+    difference: { points: number | string; percentage: number | string };
+  };
+  predict: { date: string; price: number };
+  buy: {
+    date: string;
+    price: number;
+    index: number;
+    difference: { points: number | string; percentage: number | string };
+  };
+  sell: {
+    date: string;
+    price: number;
+    index: number;
+    difference: { points: number | string; percentage: number | string };
+  };
+  success: boolean;
+  message: string;
+  index: number;
+}
+
+export const singleStockColumns: ColumnsType<ITableSingle> = [
   // {
   //   title: "買價",
   //   dataIndex: "buy",
@@ -51,7 +104,7 @@ export const singleStockColumns = [
     width: 100,
     fixed: "left",
     render: (text, row, index) => {
-      let style = { textAlign: "right" };
+      let style: any = { textAlign: "right" };
       let action = text;
       if (text === "買") {
         style.color = "red";
@@ -84,7 +137,7 @@ export const singleStockColumns = [
       const predictDate = new Date(row.predict.date);
 
       const currentPriceDiff = row.current.price - row.middle.price;
-      const currentDateDiffMillis = currentDate - middleDate;
+      const currentDateDiffMillis = timeDiff(currentDate, middleDate);
       const currentDateDiff = currentDateDiffMillis / (1000 * 60 * 60 * 24);
       let currentSpeed, currentSpeedPct;
       if (currentDateDiff <= 0) {
@@ -110,7 +163,7 @@ export const singleStockColumns = [
       */
 
       const expectPriceDiff = row.predict.price - row.current.price;
-      const expectDateDiffMillis = predictDate - middleDate;
+      const expectDateDiffMillis = timeDiff(predictDate, middleDate);
       const expectDateDiff = expectDateDiffMillis / (1000 * 60 * 60 * 24);
 
       let expectSpeed, expectSpeedPct;
@@ -129,7 +182,7 @@ export const singleStockColumns = [
         console.log(expectSpeed);
       }
 
-      let style = { textAlign: "right" };
+      let style: any = { textAlign: "right" };
 
       if (predictDate < currentDate) {
         style.color = "gray";
@@ -155,7 +208,7 @@ export const singleStockColumns = [
       const bPredictDate = new Date(b.predict.date);
 
       if (aPredictDate <= currentDate && bPredictDate <= currentDate) {
-        return aPredictDate - bPredictDate;
+        return timeDiff(aPredictDate, bPredictDate);
       } else if (aPredictDate <= currentDate) {
         return -1;
       } else if (bPredictDate <= currentDate) {
@@ -163,7 +216,7 @@ export const singleStockColumns = [
       }
 
       const aCurrentPriceDiff = a.current.price - a.middle.price;
-      const aCurrentDateDiffMillis = currentDate - aMiddleDate;
+      const aCurrentDateDiffMillis = timeDiff(currentDate, aMiddleDate);
       const aCurrentDateDiff = aCurrentDateDiffMillis / (1000 * 60 * 60 * 24);
       const aCurrentSpeed =
         Math.round((aCurrentPriceDiff / ((aCurrentDateDiff / 7) * 5)) * 100) /
@@ -171,7 +224,7 @@ export const singleStockColumns = [
       const aCurrentSpeedPct = aCurrentSpeed / aCurrentDateDiff;
 
       const aExpectPriceDiff = a.predict.price - a.middle.price;
-      const aExpectDateDiffMillis = aPredictDate - aMiddleDate;
+      const aExpectDateDiffMillis = timeDiff(aPredictDate, aMiddleDate);
       const aExpectDateDiff = aExpectDateDiffMillis / (1000 * 60 * 60 * 24);
       const aExpectSpeed =
         Math.round((aExpectPriceDiff / ((aExpectDateDiff / 7) * 5)) * 100) /
@@ -185,14 +238,14 @@ export const singleStockColumns = [
       }
 
       const bCurrentPriceDiff = b.current.price - b.middle.price;
-      const bCurrentDateDiffMillis = currentDate - bMiddleDate;
+      const bCurrentDateDiffMillis = timeDiff(currentDate, aMiddleDate);
       const bDateDiff = bCurrentDateDiffMillis / (1000 * 60 * 60 * 24);
       const bCurrentSpeed =
         Math.round((bCurrentPriceDiff / ((bDateDiff / 7) * 5)) * 100) / 100;
       const bCurrentSpeedPct = bCurrentSpeed / bDateDiff;
 
       const bExpectPriceDiff = b.predict.price - b.middle.price;
-      const bExpectDateDiffMillis = bPredictDate - bMiddleDate;
+      const bExpectDateDiffMillis = timeDiff(bPredictDate, bMiddleDate);
       const bExpectDateDiff = bExpectDateDiffMillis / (1000 * 60 * 60 * 24);
       const bExpectSpeed =
         Math.round((bExpectPriceDiff / ((bExpectDateDiff / 7) * 5)) * 100) /
@@ -255,7 +308,7 @@ export const singleStockColumns = [
     render: (text, row, index) => {
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
-      let style = {};
+      let style: any = {};
       if (predictDate < currentDate) {
         style.color = "gray";
       }
@@ -278,7 +331,7 @@ export const singleStockColumns = [
       const bPredictDate = new Date(b.predict.date);
 
       if (aPredictDate <= currentDate && bPredictDate <= currentDate) {
-        return aPredictDate - bPredictDate;
+        return timeDiff(aPredictDate, bPredictDate);
       } else if (aPredictDate <= currentDate) {
         return -1;
       } else if (bPredictDate <= currentDate) {
@@ -294,7 +347,7 @@ export const singleStockColumns = [
     align: "right",
     width: 100,
     render: (text, row, index) => {
-      let style = { textAlign: "right" };
+      let style: any = { textAlign: "right" };
 
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
@@ -317,7 +370,7 @@ export const singleStockColumns = [
     align: "right",
     width: 100,
     render: (text, row, index) => {
-      let style = { textAlign: "right" };
+      let style: any = { textAlign: "right" };
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
       if (predictDate < currentDate) {

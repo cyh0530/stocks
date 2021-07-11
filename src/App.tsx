@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Select, Row, Col, message } from "antd";
 import { HashRouter, Switch, Route, Link } from "react-router-dom";
 import axios from "axios";
@@ -49,7 +49,7 @@ function App() {
           const html = parse(res);
 
           const viewport = html.querySelector("#sheets-viewport");
-          const lastDayTab =
+          const lastDayTab: any =
             viewport.childNodes[viewport.childNodes.length - 1];
           const id = lastDayTab.id;
           const sheetMenu = html.querySelector("#sheet-menu");
@@ -58,7 +58,7 @@ function App() {
             .childNodes[0].innerText;
           const tableBody = viewport.querySelector(`#${id} table tbody`);
 
-          let data = {};
+          let data: any = {};
 
           data.date = date;
 
@@ -73,7 +73,11 @@ function App() {
               data.data = { ...data.data, ...parsedText };
             }
           }
-          console.log("Fetch took " + (new Date() - start) / 1000 + "s");
+          console.log(
+            "Fetch took " +
+              (new Date().getTime() - start.getTime()) / 1000 +
+              "s"
+          );
           console.log(data);
 
           setStockData((s) => {
@@ -110,7 +114,6 @@ function App() {
             <Route exact path={["/", "/v0"]}>
               <Main
                 stockData={stockData}
-                setStockData={setStockData}
                 activeTab={mainLastActiveTab}
                 setActiveTab={setMainLastActiveTab}
               />
@@ -125,7 +128,7 @@ function App() {
 const Header = () => {
   const { Option } = Select;
   const [options, setOptions] = useState([]);
-  const selectRef = useRef();
+  const selectRef = useRef(null);
 
   useEffect(() => {
     fetchStockList();
@@ -154,7 +157,9 @@ const Header = () => {
   */
   const onSelect = (value) => {
     window.location.href = "/stocks/#/" + value;
-    selectRef.current.blur();
+    if (selectRef.current) {
+      selectRef.current.blur();
+    }
   };
 
   const filterOption = (input, option) => {

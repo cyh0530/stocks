@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Rate, Table, Descriptions, Skeleton } from "antd";
+import { ColumnsType } from "antd/es/table";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { singleStockColumns } from "../utils/Constants";
 import { useParams, useLocation } from "react-router-dom";
-import { appScriptURL } from "../utils/Constants";
+import {
+  appScriptURL,
+  ITableSingle,
+  timeDiff,
+} from "../utils/Constants";
 
 export default function Single() {
-  let { country, symbol } = useParams();
+  let { country, symbol } = useParams<{ country: string; symbol: string }>();
   const location = useLocation();
   const [header, setHeader] = useState(<></>);
-  const [dataSource, setDataSource] = useState({});
-  const [error, setError] = useState({});
+  const [dataSource, setDataSource] = useState<any>({});
+  const [error, setError] = useState<any>({});
   const [finishFetching, setFinishFetching] = useState(false);
 
   country = country.toUpperCase();
@@ -88,7 +93,7 @@ export default function Single() {
         },
       };
       */
-     
+
       let price;
 
       if (profile.difference.points < 0) {
@@ -193,7 +198,7 @@ export default function Single() {
       {finishFetching ? header : <Skeleton active />}
       {finishFetching ? (
         <div>
-          <Table
+          <Table<ITableSingle>
             columns={singleStockColumns}
             dataSource={dataSource.current}
             size="small"
@@ -207,7 +212,7 @@ export default function Single() {
       {finishFetching ? (
         <div>
           <h3>過往紀錄</h3>
-          <Table
+          <Table<ITableSingle>
             columns={oldStockColumns}
             dataSource={dataSource.old}
             size="small"
@@ -222,7 +227,7 @@ export default function Single() {
   );
 }
 
-const oldStockColumns = [
+const oldStockColumns: ColumnsType<ITableSingle> = [
   {
     title: "訊息",
     dataIndex: "message",
@@ -231,7 +236,7 @@ const oldStockColumns = [
     fixed: "left",
     width: 100,
     render: (text, row, index) => {
-      let style = {};
+      let style: any = {};
       if (row.success) {
         style.color = "red";
       } else {
@@ -251,7 +256,7 @@ const oldStockColumns = [
     align: "right",
     width: 100,
     render: (text, row, index) => {
-      let style = {};
+      let style: any = {};
       if (row.gain.price > 0) {
         style.color = "red";
       } else {
@@ -266,7 +271,11 @@ const oldStockColumns = [
           <br />
           <small>
             {row.gain.price > 0 ? "+" : ""}
-            {(row.gain.percentage * 100).toFixed(2)}%
+            {(typeof row.gain.percentage === "string"
+              ? parseFloat(row.gain.percentage)
+              : row.gain.percentage * 100
+            ).toFixed(2)}
+            %
           </small>
         </span>
       );
@@ -290,7 +299,7 @@ const oldStockColumns = [
     sorter: (a, b) => {
       const aDate = new Date(a.buy.date);
       const bDate = new Date(b.buy.date);
-      return aDate - bDate;
+      return timeDiff(aDate, bDate);
     },
   },
   {
@@ -312,7 +321,7 @@ const oldStockColumns = [
     sorter: (a, b) => {
       const dateA = new Date(a.predict.date);
       const dateB = new Date(b.predict.date);
-      return dateA - dateB;
+      return timeDiff(dateA, dateB);
     },
   },
   {
@@ -324,7 +333,7 @@ const oldStockColumns = [
     render: (text, row, index) => {
       const currentDate = new Date(row.current.date);
       const predictDate = new Date(row.predict.date);
-      let style = {};
+      let style: any = {};
       if (predictDate < currentDate) {
         style.color = "red";
       }
